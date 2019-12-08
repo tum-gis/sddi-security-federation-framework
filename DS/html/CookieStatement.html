@@ -1,0 +1,187 @@
+
+<html>
+  
+  <head>
+    <title>SDDI Discovery Service - Cookie Statement</title>
+
+    <link rel="shortcut icon" href="/images/favicon.ico" type="image/ico">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta http-equiv="Content-Language" content="en">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf8">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css" integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4"
+        crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600" rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            font-family: 'Open Sans', sans-serif;
+        }
+
+        .header {
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+            background-color: white;
+            font-weight: 600;
+        }
+
+        .header img {
+            height: 50px;
+        }
+
+        .content {
+            background-color: #eee;
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+            border-top: 1px solid silver;
+            border-bottom: 1px solid silver;
+        }
+
+        .content .titlerow {
+            padding-bottom: 2rem;
+        }
+
+        .content .attributes {
+            font-weight: 300;
+            font-size: small;
+        }
+
+        .content .application-logo {
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+        }
+
+	.content .application-name {
+    	    font-weight: 600;
+    	    font-size: large;
+    	    padding-top: 1rem;
+    	    padding-bottom: 1rem;
+	}
+
+        form .custom-control-label {
+            padding-left: 1.2rem;
+	}
+        form .custom-control-label:before {
+            background-color: lightskyblue;
+            width: 2rem;
+            height: 2rem;
+        }
+
+        form .custom-control-label::after {
+            width: 2rem;
+            height: 2rem;
+        }
+
+        form #approval-buttons {
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+        }
+
+        form #approval-buttons input {
+            display: inline-block;
+            margin-right: 2rem;
+            width: 90px;
+            height: 60px;
+        }
+
+        .footer {
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+            background-color: #f5f5f5;
+            font-weight: 300;
+            font-size: small;
+        }
+
+
+table th,td {
+    padding: 8px 2px;
+}
+table {
+    border-collapse: separate;
+    border-spacing: 2px;
+}
+
+
+    </style>
+  </head>
+  
+  <body>
+
+
+<div class="header">
+    <div class="container">
+       <div class="row">
+           <div class="col-3">
+               <a href="/"><img src="/images/organization-logo.png" class="float-left"/></a>
+           </div>
+           <div class="col-7">
+               <font face="Britannic Bold" color="#008000" size="6"><b>Secure Dimensions GmbH</b></font><br>
+               <font face="Britannic Bold" color="#008000" size="3"><b>Holistic Geosecurity</b></font>
+           </div>
+        </div>
+    </div>
+</div>
+  <div id="content">
+    <div class="container" id="content">
+      <h1>SDDI Discovery Service - Cookie Statement</h1>
+	The SDDI Discovery Service allows a user to select the point of login from a pre-defined list of operators (the Identity Providers). This service remembers that choice in a session cookie.
+	<p>
+	For convenience, it is possible that the user persistently stores that selection. This would supress the IdP selection dialog until the user re-sets this choice.
+      <h2>Name of the service</h2>
+      SDDI Discovery Service - ds.sddi.secure-dimensions.de
+      <h2>Purpose of using cookies</h2>
+      The <a href="/" target="_DS">SDDI Discovery Service</a> - this service - stores the user's IdP selection in a session cookie to be able to support Single-Sign-On with the SDDI Federation. This service uses a persistent cookie to remember the user's IdP selection persistently.
+	<p>
+	None of the cookies stores or links to personal data.
+      <h2>Session Cookies</h2>
+	<table>
+	  <tr>
+	    <th>Cookie name</th><th>Purpose</th><th>Session/Persistent cookie?</th>
+	  </tr>
+	  <tr>
+	    <td>cookieconsent_status</td><td>stores your acceptance of the Cookie discalimer</td><td>Persistent</td>
+	  </tr>
+	  <tr>
+	    <td>SDDI_redirect_user_idp</td><td>stores the settings to temporarily redirect users transparently to their last selected IdP</td><td>Persistent</td>
+	  </tr>
+	    <td>_saml_idp</td><td>SAML2 specification comliant cookie to store the list of IdPs visited by the user</td><td>Session</td>
+	  </tr>
+	    <td>SDDI_saml_sp</td><td>It is used to display help/contact information on a page</td><td>Session</td>
+	  </tr>
+	  </tr>
+	    <td>SDDI_redirect_state</td><td>Signals that the IdP discovery dialog can be skipped.</td><td>Session</td>
+	  </tr>
+	</table>
+
+      </div>
+  </div>
+
+
+    <footer class="footer">
+        <div class="container">
+            <div class="row text-center">
+                <div class="col-sm-6 offset-sm-3 col-md-3 offset-md-0">
+                    <small>&copy <?php print date('Y')?> <a href="https://www.secure-dimensions.de" target="_SD">Secure Dimensions GmbH</a></small>
+                </div>
+                <div class="col-sm-4 col-md-2">
+                    <a href="/TermsOfUse.html" target="_S">Terms Of Use</a>
+                </div>
+                <div class="col-sm-4 col-md-2">
+                    <a href="/PrivacyStatement.html" target="_S">Privacy Statement</a>
+                </div>
+                <div class="col-sm-4 col-md-2">
+                    <a href="/CookieStatement.html" target="_S">Cookie Statement</a>
+                </div>
+                <div class="col-sm-6 offset-sm-3 col-md-3 offset-md-0">
+                    <small>Last updated 31.10.2019</small>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+
+  </body>
+  
+</html>
+
