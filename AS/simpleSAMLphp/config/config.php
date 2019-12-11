@@ -176,10 +176,10 @@ $config = array(
     'metadata.sign.algorithm' => null,
 
     'store.type'                    => 'sql',
-    'store.sql.dsn'                 => 'mysql:host=127.0.0.1;port=3306;charset=utf8;dbname=samlas',
+    'store.sql.dsn'                 => 'pgsql:host=private-db-postgresql-fra1-03501-do-user-6809200-0.db.ondigitalocean.com;port=25061;dbname=sddi;sslmode=require',
 
     'store.sql.username' => 'php',
-    'store.sql.password' => 'password',
+    'store.sql.password' => 'y6kxucrrg6fduu8g',
 
     'store.sql.prefix' => 'SimpleSAMLphp',
 

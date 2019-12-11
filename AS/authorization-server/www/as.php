@@ -212,8 +212,9 @@ $app->GET('/oauth/authorize', function($request, $psr_response, $args=null) use 
     $this->logger->addDebug("Authenticating with " . $auth_id);
     
     $as = new \SimpleSAML\Auth\Simple($auth_id);
-    if ($request->query('idp'))
-        $as->requireAuth(array('saml:idp' => $request->query('idp')));
+    $login_hint = $request->query('login_hint');
+    if ($login_hint)
+        $as->requireAuth(array('saml:idp' => $request->query('login_hint')));
     else
         $as->requireAuth();
 
@@ -271,6 +272,7 @@ $app->GET('/oauth/authorize', function($request, $psr_response, $args=null) use 
   	$payload['scope'] = $scope;
   	$payload['client_id'] = $client_id;
         $payload['csrf'] = md5($client_id.':'.$idp.':'.$username);
+	$payload['login_hint'] = $login_hint;
 
 	$personal_data_scopes = array_intersect(explode(' ',$scope), explode(' ', "email profile"));
 	$personal_data_claims = "";
@@ -306,8 +308,9 @@ $app->POST('/oauth/authorize', function($request, $psr_response, $args = null) u
     $this->logger->addDebug("Authenticating with " . $auth_id);
 
     $as = new \SimpleSAML\Auth\Simple($auth_id);
-    if ($request->query('idp'))
-        $as->requireAuth(array('saml:idp' => $request->query('idp')));
+    $login_hint = $request->request('login_hint');
+    if ($login_hint)
+        $as->requireAuth(array('saml:idp' => $login_hint));
     else
         $as->requireAuth();
 
@@ -457,21 +460,23 @@ $app->POST('/oauth/tokenrevoke', function(Request $request, Response $response) 
     }
 
     $request = OAuth2\Request::createFromGlobals();
-    $data = $server->handleRevokeRequest($request)->getParameters();
-    if (isset($data['error']))
-	return $response->withJson($data, 400);
+    $oauth_response = new OAuth2\Response();
+    $server->handleRevokeRequest($request,$oauth_response);
+    if ($oauth_response->getStatusCode() != 200)
+    {
+	return $response->withJson($oauth_response->getParameters(), $oauth_response->getStatusCode());
+    }
 
     $callback = $request->request('callback');
     $this->logger->addDebug("callback: " . $callback);
-    if ($callback !== null)
+    if ($callback != null)
     {
-	$response->withHeader('Content-Type', 'text/plain');
-	$response->withStatus(200);
-	$response->write($callback);
-        return $response;
+	return $response->withAddedHeader('Content-Type', 'text/plain')->withStatus(200)->write($callback);
     }
     else
-    	return $response->withJson($data, 200);
+    {
+    	return $response->withJson($oauth_response->getParameters(), 200);
+    }
 });
 
 $app->OPTIONS('/oauth/tokenrevoke', function(Request $request, Response $response) {
@@ -479,7 +484,7 @@ $app->OPTIONS('/oauth/tokenrevoke', function(Request $request, Response $respons
     $origin = $request->getHeader('Origin');
     $response = $response->withAddedHeader('Access-Control-Allow-Origin', $origin);
     $response = $response->withAddedHeader('Access-Control-Allow-Methods', "POST, OPTIONS");
-    $response = $response->withAddedHeader('Access-Control-Allow-Headers', "Authorization");
+    $response = $response->withAddedHeader('Access-Control-Allow-Headers', "Authorization, Content-Type");
     $response = $response->withAddedHeader('Access-Control-Max-Age', '86400');
 
     return $response->withStatus(204);
@@ -634,6 +639,16 @@ $app->GET('/saml/sessioninfo', function(Request $request, Response $response) us
     return $this->renderer->render($response, "/sessioninfo.php", array('payload' => $sessioninfo));
 });
 
+// SAML login to support testing the authorization code flow
+$app->GET('/saml/login', function(Request $request, Response $response) {
+    $this->logger->addDebug("GET /saml/login");
+
+    $as = new \SimpleSAML\Auth\Simple('oauth');
+    $as->requireAuth();
+
+    return $response->withRedirect('/api/');
+});
+
 // SAML logout does only make sense if executed in a Web Browser with an active user (of whom the session might have already be expired)
 $app->GET('/saml/logout', function(Request $request, Response $response) use ($server, $app) {
     $this->logger->addDebug("GET /saml/logout");
@@ -777,15 +792,18 @@ $app->GET('/oauth/logout', function(Request $request, Response $response) use ($
     if ($data === false)
     {
         $payload = array();
-        $payload['title'] = "Warning: Logout attempt with invalid access Token";
+        $payload['title'] = "Warning: Logout attempt with invalid access token";
         $payload['error_message'] = 'Logout was initiated with an invalid access token! Logout cannot proceed. You must close the application or Web-Browser to complete the logout!';
         return $this->renderer->render($response, "/error.php", array('payload' => $payload));
     }
     else if ($data['auth_id'] == null)
     {
-        // This access token was generated from an authorization code => No SAML Auth source associated.
-        // Because we can safely assume that there is no session, we just return to the $returnTo URL
-        return $response->withRedirect($redirect);
+        // This access token was generated from a client credentials grant => No SAML Auth source associated.
+	// It is not possible to initiate a ogout based on such an access token
+        $payload = array();
+        $payload['title'] = "Warning: Logout attempt with invalid access token";
+        $payload['error_message'] = 'Logout was initiated with an access token created via the client_credentials grant! Logout not possible!';
+        return $this->renderer->render($response, "/error.php", array('payload' => $payload));
     }
     else
     {
@@ -1151,79 +1169,6 @@ $app->GET('/listoperators', function(Request $request, Response $response) use (
 });
 
 /**
- * OAuth2 Dynamic Client Registration - RFC 7591
-**/
-$app->POST('/oauth/register', function(Request $request, Response $response) use ($server, $app) {
-
-    $request = OAuth2\Request::createFromGlobals();
-
-    $software_statement = $request->request('software_statement');
-    if (isset( $software_statement))
-    {
-        $jws = null;
-        try {
-            $jws = SimpleJWS::load($software_statement);
-        }
-        catch (Exception $e) {
-      		$data['error'] = 'invalid_software_statement';
-      		$data['error_description'] = 'The software statement is invalid';
-      		return $response->withJson($data, 400);
-        }
-        
-        $public_key = openssl_pkey_get_public("file:///etc/pki/oauth2/SD_Public_Key.pem");
-    
-        // verify that the token is valid and had the same values
-        if ($jws->isValid($public_key, 'RS256')) {
-            $payload = $jws->getPayload();
-            //print_r($payload);
-        }
-        else
-        {
-            $data['error'] = 'invalid_signature';
-            $data['error_description'] = 'The digital signature on the software statement is invalid';
-            return $response->withJson($data, 400);
-        }
-    }
-    else
-    {
-        // we cannot process without a software statement
-        $data['error'] = 'missing_software_statement';
-        $data['error_description'] = 'The software statement is missing';
-        return $response->withJson($data, 400);
-    } 
-
-    $iss = $server->getConfig('iss');
-    $redirect_uris = $payload['redirect_uris'];
-    $grant_types = $payload['grant_types'];
-    $scope = $payload['scope'];
-    $software_id = $payload['software_id'];
-
-    $client_id = $software_id;
-    $redirect_uri = "";
-    $grant_type = "";
-    foreach ($grant_types as $ix => $type) {
-            if ($ix != 0)
-                    $grant_type = $grant_type . " " . $type;
-            else
-                    $grant_type = $type;
-    }
-    foreach ($redirect_uris as $ix => $uri) {
-            if ($ix != 0)
-                    $redirect_uri = $redirect_uri . " " . $uri;
-            else
-                    $redirect_uri = $uri;
-    }
-
-    $storage = $server->getStorage('client_credentials');
-    $client_secret = bin2hex(openssl_random_pseudo_bytes(32));
-    $clientDetails = $storage->setClientDetails($client_id, $client_secret, $redirect_uri, $grant_type, $scope, null, null);
-    
-    $data = array('client_id' => $client_id, 'client_secret' => $client_secret, 'redirect_uri' => $redirect_uri, 'grant_type' => $grant_type, 'scope' => $scope);
-    return $response->withJson($data, 200);
-});
-
-
-/**
  * OpenID Connect UserInfo
 **/
 $app->MAP(['GET', 'POST'], '/openid/userinfo', function(Request $request, Response $response) use ($server, $app) {
@@ -1272,11 +1217,15 @@ $app->MAP(['GET', 'POST'], '/openid/userinfo', function(Request $request, Respon
 
 
     // reduce the scopes to the intersection between the registered scopes for the client_id and the 
-    $registered_scopes = $scopes = explode(' ',$storage->getClientScope($client_id));
     $token_scopes = explode(' ', $token_data['scope']);
+    if ($client_id)
+        $registered_scopes = $scopes = explode(' ',$storage->getClientScope($client_id));
+    else
+	$registered_scopes = $token_scopes;
+
     $remaining_scopes = array_intersect($token_scopes, $registered_scopes);
     
-    if (!in_array('openid', $registered_scopes))
+    if ($client_id && !in_array('openid', $registered_scopes))
     {   
         $data = array('error' => 'insufficient_scope', 'error_description' => 'The request requires higher privileges than provided by the requesting application');
         return $response->withStatus(403)->withHeader('Content-Type', 'application/json')->write(json_encode($data));
@@ -1316,7 +1265,7 @@ $app->MAP(['GET', 'POST'], '/openid/userinfo', function(Request $request, Respon
     return $response->withStatus(200)->withHeader('Content-Type', 'application/jwt')->write($jwe->toString());
 });
 
-$app->OPTIONS('/oauth/userinfo', function(Request $request, Response $response) {
+$app->OPTIONS('/openid/userinfo', function(Request $request, Response $response) {
     $this->logger->addDebug("OPTIONS /userinfo");
     $origin = $request->getHeader('Origin');
     $response = $response->withAddedHeader('Access-Control-Allow-Origin', $origin);

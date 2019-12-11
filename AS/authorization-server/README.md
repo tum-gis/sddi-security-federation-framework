@@ -352,7 +352,7 @@ THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR I
 
 $config = array(
 
-    'baseurlpath' => 'https://as.sddi.secure-dimensions.de/simplesaml/',
+    'baseurlpath' => 'https://' . $_SERVER['SERVER_NAME'] . '/simplesaml/',
     'certdir' => 'cert/',
     'loggingdir' => 'log/',
     'datadir' => 'data/',
@@ -372,7 +372,7 @@ $config = array(
 
     'admin.checkforupdates' => true,
 
-    'trusted.url.domains' => array('apps.sddi.secure-dimensions.de'),
+    'trusted.url.domains' => array(''),
 
     'trusted.url.regex' => false,
 
@@ -416,21 +416,21 @@ $config = array(
 
     'session.state.timeout' => (60 * 60), // 1 hour
 
-    'session.cookie.name' => 'SDDISessionID',
+    'session.cookie.name' => '<you name it>',
 
     'session.cookie.lifetime' => 0,
 
     'session.cookie.path' => '/',
 
-    'session.cookie.domain' => '.sddi.secure-dimensions.de',
+    'session.cookie.domain' => '<see SimpleSAMLphp docs for more details>',
 
     'session.cookie.secure' => true,
 
-    'session.phpsession.cookiename' => 'SDDIPHP',
+    'session.phpsession.cookiename' => '<you name it>',
     'session.phpsession.savepath' => null,
     'session.phpsession.httponly' => true,
 
-    'session.authtoken.cookiename' => 'SDDIAuthToken',
+    'session.authtoken.cookiename' => '<you name it>',
 
     'session.rememberme.enable' => false,
     'session.rememberme.checked' => false,

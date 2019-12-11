@@ -562,5 +562,9 @@ class AuthorizeController implements AuthorizeControllerInterface, BaseAuthorize
         return $this->response_type;
     }
 
+    public function getResponseTypes()
+    {
+	return $this->getValidResponseTypes();
+    }
 
 }

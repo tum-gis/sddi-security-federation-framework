@@ -13,8 +13,9 @@ THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR I
 $config = array(
     'iss' => $_SERVER['SERVER_NAME'],
     'issuer' => 'https://' . $_SERVER['SERVER_NAME'],
-    'ds_url' => 'https://ds.sddi.secure-dimensions.de/WAYF',
+    'ds_url' => '<this is the same URL as you provided in the AS config/config.php under ds_url>',
     'allow_implicit' => true,
+    'allow_public_clients' => false, // public clients are not allowed with ClientAssertionType
     'access_lifetime' => 1800, // 30 minutes
     'refresh_token_lifetime' => 2592000, // 30 days
     'always_issue_new_refresh_token' => true, 

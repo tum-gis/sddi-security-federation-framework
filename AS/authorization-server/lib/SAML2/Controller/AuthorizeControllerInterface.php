@@ -42,4 +42,6 @@ interface AuthorizeControllerInterface
      * @return bool
      */
     public function validateAuthorizeRequest(RequestInterface $request, ResponseInterface $response);
+
+    public function getResponseTypes();
 }

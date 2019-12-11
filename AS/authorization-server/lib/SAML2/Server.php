@@ -124,6 +124,7 @@ class Server extends BaseServer implements
         $this->tokenType = $tokenType;
         $this->scopeUtil = $scopeUtil;
         $this->clientAssertionType = $clientAssertionType;
+	$this->responseTypes = $responseTypes;
 
     }
 

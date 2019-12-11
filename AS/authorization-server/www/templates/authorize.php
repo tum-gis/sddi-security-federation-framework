@@ -340,6 +340,7 @@
 
                     <input type="hidden" name="client_id" value="<?php print $payload['client_id']?>">
                     <input type="hidden" name="scope" value="<?php print $payload['scope']?>">
+                    <input type="hidden" name="login_hint" value="<?php ($payload['login_hint']) ? print $payload['login_hint'] : print '';?>">
                     <input type="hidden" id="csrf" name="csrf" value="<?php print $payload['csrf']?>">
                     <input type="hidden" id="authorized" name="authorized" value="No">
                     <input type="hidden" id="agree_privacy" name="agree_privacy" value="No">

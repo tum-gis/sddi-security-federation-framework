@@ -1,0 +1,714 @@
+openapi: 3.0.0
+info:
+  version: 0.3.0
+  title: Secure Dimensions OpenID Connect / OAuth2 Authorization Server with SAML2 federated IdP
+  description: |
+    This implementation is based on the OAuth2 library available from github.com/bshaffer... with an extension for supporting SAML2 federated Single-Sign-On. The SAML2 authentication support is implemented via the SimpleSAMLphp package.
+    
+    This specification describes in the "Token Management" section the OAuth2-related endpoints for creating, revoking and verification of tokens; in the "User Info" section the OpenID Connect-related UserInfo endpoint; in the "Personal Data" section the GDPR-related endpoints.
+
+    The endpoints in this specification are derived from a number of RFCs and external documents:
+
+      * The OAuth2 framework - [RFC 6749][rfc6749]
+      * The OAuth 2.0 Authorization Framework: Bearer Token Usage - [RFC 6750][rfc6750] 
+      * OAuth 2.0 Token Introspection - [RFC 7662][rfc7662]
+      * OAuth 2 Token Revocation - [RFC 7009][rfc7009]
+      * OpenID Connect - [Community Standard][oidc]
+
+    The OpenID configuration can be found at `/.well-known/openid-configuration`.
+
+    For the OAuth2 Authorization Code workflow, the following Authorization URL is available:
+      * `/saml/login.html` is the URL with which developers can login (via SAML2) to test the authorization code flow;
+
+     [rfc6749]: https://tools.ietf.org/html/rfc6749
+     [rfc6750]: https://tools.ietf.org/html/rfc6750
+     [rfc7009]: https://tools.ietf.org/html/rfc7009
+     [rfc7662]: https://tools.ietf.org/html/rfc7662
+     [oidc]: https://openid.net/specs/openid-connect-core-1_0.html
+  contact:
+    name: Secure Dimensions GmbH
+    url: 'https://www.secure-dimensions.de'
+    email: 'support@secure-dimensions.de'
+servers:
+  - url: 'https://as.sddi.secure-dimensions.de'
+tags:
+  - name: Token Management
+    description: Get or revoke access and refresh tokens.
+  - name: Introspection
+    description: Get information about access and refresh tokens.
+  - name: Claims
+    description: Get user claims
+paths:
+  '/oauth/authorize':
+    get:
+      operationId: oauth2Authorize
+      summary: The authorization endpoint for the 'authorization_code' workflow.
+      description: |
+        ## Specification
+        This is the [Authorization Endpoint][RFC 6749 §3.1], used as part of the [Authorization Code Grant][RFC 6749 §4.1].
+
+        ## Documentation notes
+        This endpoint is documented here mostly in order to document its
+        parameters.
+
+         [RFC 6749 §3.1]: https://tools.ietf.org/html/rfc6749#section-3.1
+         [RFC 6749 §4.1]: https://tools.ietf.org/html/rfc6749#section-4.1
+
+      tags:
+        - Token Management
+      parameters:
+        - in: query
+          name: response_type
+          description: The OAuth2 `response_type`. Only the authorization code workflow is supported.
+          required: true
+          schema:
+            type: string
+            enum:
+              - code
+              - token
+              - id_token token
+              - code id_token
+        - in: query
+          name: client_id
+          description: The OAuth2 `client_id` assigned to the client when it was registered.
+          required: true
+          schema:
+            $ref: '#/components/schemas/ClientIdentification'
+        - in: query
+          name: redirect_uri
+          description: 'The OAuth2 `redirect_uri`, which must be one of the registered URIs for the client. It is required if the client has registered more than one redirection URI.'
+          required: false
+          schema:
+            type: string
+            example: 'https://redirect.me/callback/'
+        - in: query
+          name: scope
+          description: The OAuth2 `scope` on which the client requires access. It is required because no default scope is implemented.
+          required: true
+          schema:
+            type: string
+            description: |
+              The different scopes supported for this implementation.
+
+              For an authorization_code request, the following values are available:
+                * "": The OAuth2 flow where there is no user; information. The AS just releases an access token;
+                * saml: Information about the IdP used for login
+                * openid: The user's unique identifier is requestedfrom the IdP and used to generate the AS specific user identifier - the cryptoname;
+                * profile: Enables to request of OpenID Connect claims associated with the scope `profile`
+                * email: Enables to request of OpenID Connect claims associated with the scope `email`
+            enum:
+              - ""
+              - saml
+              - offline_access
+              - openid
+              - openid offline_access
+              - openid saml
+              - openid saml offline_access
+              - openid profile
+              - openid profile offline_access
+              - openid profile saml
+              - openid profile saml offline_access
+              - openid email
+              - openid email offline_access
+              - openid email saml
+              - openid email saml offline_access
+              - openid profile email
+              - openid profile offline_access
+              - openid profile email saml
+              - openid profile email saml offline_access
+        - in: query
+          name: state
+          description: 'The OAuth2 `state` is retransmitted in the query string when redirecting to the redirection endpoint. This parameter is mandatory because its absence implies the potential presence of a CSRF vulnerability for the application.'
+          required: true
+          schema:
+            type: string
+            example: xyz
+        - in: query
+          name: nonce
+          description: 'String value used to associate a Client session with an ID Token, and to mitigate replay attacks.'
+          required: false
+          schema:
+            type: string
+            example: 123
+        - in: query
+          name: login_hint
+          description: "Hint to the Authorization Server about the login identifier the End-User might use to log in. This is the SAML2 EntityId of the IdP that the user wants to login with. The identifier can be obtained from the IdP's public SAML2 metadata."
+          required: false
+          schema:
+            type: string
+            example: 
+      responses:
+        default:
+          description: |
+            A HTML content shown to a user agent to begin the OAuth 2 authorization
+            process. This endpoint will eventually redirect to the redirection
+            endpoint specified by the TPP, which will receive the `code` and
+            `state` parameters as specified by [RFC 6749 §4.1.2].
+
+            In case parameters are missing or wrong, an error page will be
+            shown. In case the `client_id` and the `redirect_uri` match, the
+            user will also be redirected to the redirection endpoint specified
+            by the TPP, with parameters `error` and `error_description` filled
+            as specified by [RFC 6749 §4.1.2.1].
+
+             [RFC 6749 §4.1.2]: https://tools.ietf.org/html/rfc6749#section-4.1.2
+             [RFC 6749 §4.1.2.1]: https://tools.ietf.org/html/rfc6749#section-4.1.2.1
+          content:
+            text/html: {}
+  '/oauth/token':
+    post:
+      security:
+        - clientCredentials: []
+      operationId: oauth2Token
+      summary: Request a new access token.
+      description: |
+        ## Specification
+
+        The token endpoint, as described in [RFC 6749 §3.2], is used in three cases:
+         * [Client Credentials Grant][RFC 6749 §4.4]
+         * [Token Refresh][RFC 6749 §6]
+         * [Resource Owner Password Credentials][RFC 6749 §4.3]
+
+         [RFC 6749 §3.2]: https://tools.ietf.org/html/rfc6749#section-3.2
+         [RFC 6749 §4.1]: https://tools.ietf.org/html/rfc6749#section-4.1
+         [RFC 6749 §4.3]: https://tools.ietf.org/html/rfc6749#section-4.3
+         [RFC 6749 §4.4]: https://tools.ietf.org/html/rfc6749#section-4.4
+         [RFC 6749 §6]: https://tools.ietf.org/html/rfc6749#section-6
+         [RFC 7636 §4.5]: https://tools.ietf.org/html/rfc7636#section-4.3
+      tags:
+        - Token Management
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRequest'
+            examples:
+              clientCredentials:
+                summary: A client_credentials token request
+                value: { "grant_type": "client_credentials"}
+              refreshToken:
+                summary: A refresh_token token request
+                value: { "grant_type": "refresh_token", "refresh_token": "97d4fbb35dab9bf5b9f90ac10b8b30c4ef6ad4026678c3a22ec9a6c89ac73624"}
+      responses:
+        '200':
+          description: New access token generated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '400':
+          description: Some parameters were invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenErrorResponse'
+  '/oauth/tokenrevoke':
+    post:
+      security:
+        - clientCredentials: []
+      operationId: oauth2Revocation
+      summary: Revoke a refresh token or an access token.
+      description: |
+        ## Specification
+
+        The revocation endpoint, as described in [RFC 7009 §2][1].
+
+         [1]: https://tools.ietf.org/html/rfc7009#section-2
+
+      tags:
+        - Token Management
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RevocationRequest'
+            example: client_id=a771a1923bd403603831a2425df818a4& token=97d4fbb35dab9bf5b9f90ac10b8b30c4ef6ad4026678c3a22ec9a6c89ac73624& token_type_hint=refresh_token
+      responses:
+        '200':
+          description: Token revoked (or already invalid).
+        '400':
+          description: Some parameters were invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RevocationErrorResponse'
+  '/oauth/tokeninfo':
+    post:
+      security:
+        - clientCredentials: []
+        - bearerToken: []
+      operationId: oauth2Introspection
+      summary: Introspect a refresh token or an access token.
+      description: |
+        ## Specification
+
+        The introspection endpoint, as described in [RFC 7662 §2][1].
+
+         [1]: https://tools.ietf.org/html/rfc7662#section-2
+
+      tags:
+        - Introspection
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/IntrospectionRequest'
+            example: token=97d4fbb35dab9bf5b9f90ac10b8b30c4ef6ad4026678c3a22ec9a6c89ac73624& token_type_hint=refresh_token
+      responses:
+        '200':
+          description: Token information.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntrospectionResponse'
+        '401':
+          description: The client is unauthorized.
+  '/oauth/logout':
+    get:
+      operationId: oauth2Logout
+      summary: Logout based on `code`, `access_token` or `refresh_token`.
+      description: |
+        ## Specification
+
+        The logout should be used by web or mobile applications to cancel an (active) authentiation session. The submitted token is invalided before the actual logout with the active IdP is initiated. So, even if the logout does result in an error, the submitted token becomes inactive.
+      tags:
+        - Token Management
+      parameters:
+        - in: query
+          name: code
+          description: The OAuth2 `code` obtained via the `authorization_code` flow.
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: token
+          description: The OAuth2 `access_token` or `refresh_token` obtained by the application.
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: token_type_hint
+          description: 'A hint for the type of token to revoke. If the given token is not found with the given type hint, the search will be extended to other token types.'
+          required: false
+          schema:
+            type: string
+            enum:
+            - access_token
+            - refresh_token
+        - in: query
+          name: redirect
+          description: The URL where to redirect to after sucessful logout.
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'HTML page with information about a successful logout or error. If `redirect` parameter is presented, the corresponding page. In case that the IdP does not redirect back to the Authorization Server (or the application does not support that), the Authorization Server displays the default logout page `/logoutcomplete`.'
+  '/openid/userinfo':
+    get:
+      security:
+        - bearerToken: []
+      operationId: oauth2UserinfoGet
+      summary: Obtain user claims as defined in OpenID Connect.
+      description: |
+        ## Specification
+
+        The userinfo endpoint, as described in [OpenID Connect Core 1.0 incorporating errata set 1 §5.3][1].
+        
+        [1]: https://openid.net/specs/openid-connect-core-1_0.html#UserInfo
+
+        This implementation will return the user claims encrypted as JWE unless the request contains the `client_id` and `client_secret` of the application.
+
+      tags:
+        - Claims
+      parameters:
+        - in: query
+          name: client_id
+          description: The OAuth2 `client_id` assigned to the application.
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: client_secret
+          description: The OAuth2 `client_secret` assigned to the application.
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'User claims information.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserinfoResponse'
+        '400':
+          description: The request is invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserinfoErrorResponse'
+        '401':
+          description: The client is unauthorized.
+        '403':
+          description: The provided token has insufficient scope(s).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserinfoErrorResponse'
+    post:
+      security:
+        - bearerToken: []
+      operationId: oauth2UserinfoPost
+      summary: Obtain user claims as defined in OpenID Connect.
+      description: |
+        ## Specification
+
+        The userinfo endpoint, as described in [OpenID Connect Core 1.0 incorporating errata set 1 §5.3][1].
+
+         [1]: https://openid.net/specs/openid-connect-core-1_0.html#UserInfo
+
+        This implementation will return the user claims encrypted as JWE unless the request contains the `client_id` and `client_secret` of the application.
+      tags:
+        - Claims
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserinfoRequest'
+      responses:
+        '200':
+          description: User claims information.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserinfoResponse'
+        '400':
+          description: The request is invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserinfoErrorResponse'
+        '401':
+          description: The client is unauthorized.
+        '403':
+          description: The provided token has insufficient scope(s).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserinfoErrorResponse'
+components:
+  securitySchemes:
+    clientCredentials:
+      type: http
+      scheme: basic
+    bearerToken:
+      type: http
+      scheme: bearer
+  schemas:
+    ClientIdentification:
+      type: string
+      description: 'The client ID assigned on registration. Cannot be changed by the client - if the value sent by the client when updating a registration does not match the current value, the request will be rejected.'
+      example: 'a771a192-3bd40-3603-831a2-425df818a463'
+    TokenRequest:
+      oneOf:
+        - $ref: '#/components/schemas/AuthorizationCodeTokenRequest'
+        - $ref: '#/components/schemas/ClientCredentialsTokenRequest'
+        - $ref: '#/components/schemas/RefreshTokenTokenRequest'
+      discriminator:
+        propertyName: grant_type
+        mapping:
+          authorization_code: '#/components/schemas/AuthorizationCodeTokenRequest'
+          client_credentials: '#/components/schemas/ClientCredentialsTokenRequest'
+          refresh_token: '#/components/schemas/RefreshTokenTokenRequest'
+    AuthorizationCodeTokenRequest:
+      type: object
+      required:
+        - client_id
+        - grant_type
+        - code
+        - code_verifier
+      properties:
+        client_id:
+          $ref: '#/components/schemas/ClientIdentification'
+        grant_type:
+          type: string
+          enum:
+            - authorization_code
+        code:
+          type: string
+          description: The authorization code obtained by the redirection endpoint in the `code` query string parameter.
+          example: 2addb9e34dcc427f05fefcb045327e8a
+        redirect_uri:
+          type: string
+          description: The `redirect_uri` that was given as a parameter on the authorization endpoint.
+          example: 'https://redirect.example.com/cb'
+      additionalProperties: false
+    ClientCredentialsTokenRequest:
+      type: object
+      required:
+        - client_id
+        - grant_type
+      properties:
+        client_id:
+          $ref: '#/components/schemas/ClientIdentification'
+        grant_type:
+          type: string
+          enum:
+            - client_credentials
+        scope:
+          type: string
+          description: |
+            The scope of the requested access token. Can be used to restrict the
+            new access token to a subset of the scope allowed to the client and
+            token type.
+
+      additionalProperties: false
+    RefreshTokenTokenRequest:
+      type: object
+      required:
+        - client_id
+        - grant_type
+        - refresh_token
+      properties:
+        client_id:
+          $ref: '#/components/schemas/ClientIdentification'
+        grant_type:
+          type: string
+          enum:
+            - refresh_token
+        refresh_token:
+          type: string
+          description: The `refresh_token` previously provided to the client.
+          example: 97d4fbb35dab9bf5b9f90ac10b8b30c4ef6ad4026678c3a22ec9a6c89ac73624
+        scope:
+          type: string
+          description: |
+            The scope of the requested access token. Can be used to restrict the
+            new access token to a subset of the scope allowed to the client and
+            token type.
+
+      additionalProperties: false
+    TokenResponse:
+      type: object
+      required:
+        - access_token
+        - token_type
+      properties:
+        access_token:
+          type: string
+          description: 'The newly-obtained access token.'
+        token_type:
+          type: string
+          description: 'The type of the token. Currently only bearer tokens are emitted.'
+          enum:
+            - bearer
+        expires_in:
+          type: number
+          description: 'The lifetime of the access token, in seconds.'
+        refresh_token:
+          type: string
+          description: 'The refresh token to use, for an ''authorization_code'' token request.'
+        scope:
+          type: string
+          description: 'The effective scope of the newly-obtained token.'
+    TokenErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: 'A machine-readable category for the error, as in [RFC 6749, §4.1.2.1](https://tools.ietf.org/html/rfc6749#section-4.1.2.1).'
+          enum:
+            - invalid_request
+            - invalid_client
+            - invalid_grant
+            - unauthorized_client
+            - unsupported_grant_type
+            - invalid_scope
+        error_description:
+          type: string
+          description: A human-readable error message that gives details about the error.
+        error_uri:
+          type: string
+          description: A URL that gives more information about the error.
+    RevocationRequest:
+      type: object
+      required:
+        - token
+      properties:
+        token:
+          type: string
+          description: The token to revoke.
+        token_type_hint:
+          type: string
+          description: 'A hint for the type of token to revoke. If the given token is not found with the given type hint, the search will be extended to other token types.'
+          enum:
+            - access_token
+            - refresh_token
+        callback:
+          type: string
+          description: 'The qualified name of a JavaScript function.'
+      additionalProperties: false
+    RevocationErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: 'A machine-readable category for the error, as in [RFC 6749, §4.1.2.1](https://tools.ietf.org/html/rfc6749#section-4.1.2.1).'
+          enum:
+            - invalid_request
+            - invalid_client
+            - unsupported_token_type
+        error_description:
+          type: string
+          description: A human-readable error message that gives details about the error.
+        error_uri:
+          type: string
+          description: A URL that gives more information about the error.
+    IntrospectionRequest:
+      type: object
+      required:
+        - token
+      properties:
+        token:
+          type: string
+          description: The token to introspect.
+        token_type_hint:
+          type: string
+          description: 'A hint for the type of token to be introspected. If the given token is not found with the given type hint, the search will be extended to other token types.'
+          enum:
+            - access_token
+            - refresh_token
+      additionalProperties: false
+    IntrospectionResponse:
+      type: object
+      required:
+        - active
+      properties:
+        active:
+          type: boolean
+          description: 'Boolean indicator of whether or not the presented token is currently active.'
+        scope:
+          type: string
+          description: 'A JSON string containing a space-separated list of scopes associated with this token.'
+        client_id:
+          type: string
+          description: 'Client identifier for the OAuth 2.0 client that requested this token.'
+        username:
+          type: string
+          description: 'Human-readable identifier for the resource owner who authorized this token.'
+        token_type:
+          type: string
+          description: 'Type of the token as defined in Section 5.1 of OAuth 2.0 [RFC6749].'
+        exp:
+          type: number
+          description: 'Integer timestamp, measured in the number of seconds since January 1 1970 UTC, indicating when this token will expire, as defined in JWT [RFC7519].'
+        iat:
+          type: number
+          description: 'Integer timestamp, measured in the number of seconds since January 1 1970 UTC, indicating when this token was originally issued, as defined in JWT [RFC7519].'
+        nbf:
+          type: number
+          description: 'Integer timestamp, measured in the number of seconds since January 1 1970 UTC, indicating when this token is not to be used before, as defined in JWT [RFC7519].'
+        sub:
+          type: string
+          description: 'Subject of the token, as defined in JWT [RFC7519]. Usually a machine-readable identifier of the resource owner who authorized this token.'
+        aud:
+          type: string
+          description: 'Service-specific string identifier or list of string identifiers representing the intended audience for this token, as defined in JWT [RFC7519].'
+        iss:
+          type: string
+          description: 'String representing the issuer of this token, as defined in JWT [RFC7519].'
+        jti:
+          type: string
+          description: 'String identifier for the token, as defined in JWT [RFC7519].'
+    UserinfoRequest:
+      type: object
+      properties:
+        client_id:
+          type: string
+          description: 'The OAuth2 `client_id` assigned to the application.'
+        client_secret:
+          type: string
+          description: 'The OAuth2 `client_secret` assigned to the application.'
+      additionalProperties: false
+    UserinfoResponse:
+      type: object
+      required:
+        - sub
+      properties:
+        sub:
+          type: string
+          description: 'Subject - Identifier for the End-User at the Issuer.'
+        name:
+          type: string
+          description: "End-User's full name in displayable form including all name parts, possibly including titles and suffixes, ordered according to the End-User's locale and preferences."
+        given_name:
+          type: string
+          description: 'Given name(s) or first name(s) of the End-User. Note that in some cultures, people can have multiple given names; all can be present, with the names being separated by space characters.'
+        family_name:
+          type: string
+          description: 'Surname(s) or last name(s) of the End-User. Note that in some cultures, people can have multiple family names or no family name; all can be present, with the names being separated by space characters.'
+        middle_name:
+          type: string
+          description: 'Middle name(s) of the End-User. Note that in some cultures, people can have multiple middle names; all can be present, with the names being separated by space characters. Also note that in some cultures, middle names are not used.'
+        nickname:
+          type: string
+          description: 'Casual name of the End-User that may or may not be the same as the given_name.'
+        preferred_username:
+          type: string
+          description: 'JSON string including special characters such as @, /, or whitespace. '
+        profile:
+          type: string
+          description: "URL of the End-User's profile page."
+        picture:
+          type: string
+          description: "URL of the End-User's profile picture."
+        website:
+          type: string
+          description: "URL of the End-User's Web page or blog."
+        email:
+          type: string
+          description: "End-User's preferred e-mail address."
+        email_verified:
+          type: boolean
+          description: "True if the End-User's e-mail address has been verified; otherwise false."
+        gender:
+          type: string
+          description: "End-User's gender. Values defined by this specification are female and male. "
+          enum:
+            - male
+            - female
+        birthdate:
+          type: string
+          description: "End-User's birthday, represented as an ISO 8601:2004 [ISO8601‐2004] YYYY.MM.DD format."
+        zoneinfo:
+          type: string
+          description: "String from zoneinfo [zoneinfo] time zone database representing the End-User's time zone."
+        locale:
+          type: string
+          description: "End-User's locale, represented as a BCP47 [RFC5646] language tag."
+        updated_at:
+          type: number
+          description: "Time the End-User's information was last updated. Its value is a JSON number representing the number of seconds from 1970.01.01T0:0:0Z as measured in UTC until the date/time."
+    UserinfoErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: 'A machine-readable category for the error, as in [OpenID Connect Core 1.0 incorporating errata set 1, §5.3.3](https://openid.net/specs/openid-connect-core-1_0.html#UserInfo).'
+          enum:
+            - invalid_request
+            - invalid_client
+            - insufficient_scope
+        error_description:
+          type: string
+          description: A human-readable error message that gives details about the error.
