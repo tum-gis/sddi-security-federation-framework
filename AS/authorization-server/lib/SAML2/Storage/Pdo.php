@@ -64,7 +64,7 @@ class Pdo extends BasePdo implements AuthorizationCodeStorageInterface, UserClai
 	    if ($this->driver_name == 'pgsql')
 	    {
 	        // test if the client table exists - if yes we can assume that all other tables exists too. If the result is "0" than we need to init the database
-	        $stmt = $this->db->prepare(sprintf("SELECT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = '%s')", $this->config['client_table']));
+	        $stmt = $this->db->prepare(sprintf("SELECT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = '%s' AND TABLE_CATALOG = current_database())", $this->config['client_table']));
 	        $stmt->execute();
     
 	        $res = $stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -74,7 +74,7 @@ class Pdo extends BasePdo implements AuthorizationCodeStorageInterface, UserClai
 	    else
 	    {
 	        // test if the client table exists - if yes we can assume that all other tables exists too. If the result is "0" than we need to init the database
-                $stmt = $this->db->prepare(sprintf("SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = '%s'", $this->config['client_table']));
+                $stmt = $this->db->prepare(sprintf("SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = '%s' AND TABLE_SCHEMA = database()", $this->config['client_table']));
                 $stmt->execute();
     
                 $res = $stmt->fetchAll(\PDO::FETCH_ASSOC);

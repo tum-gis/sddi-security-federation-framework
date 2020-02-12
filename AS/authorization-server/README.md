@@ -187,14 +187,6 @@ The database tables will be created automatically if not exist. in order to chan
 'create_db' => false,
 ````
 
-Enable the Event Scheduler in the database (please consult the help for your database) and import the following event triggers to cleanup expired authorization codes, access tokens and refresh tokens.
-
-````
-mysql> source deleteExpiredAuthorizationCodesEvent.sql;
-mysql> source deleteExpiredAccessTokensEvent.sql;
-mysql> source deleteExpiredRefreshTokensEvent.sql;
-````
-
 To start the Event Scheduler (MySQL on CENTOS) add the entry `event_scheduler = on` under the `[mysqld]` section in `/etc/my.cnf` and restart mysqld.
 
 ````

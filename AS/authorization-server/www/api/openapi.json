@@ -1,9 +1,9 @@
 {
   "openapi": "3.0.0",
   "info": {
-    "version": "0.3.0",
+    "version": "0.3.2",
     "title": "Secure Dimensions OpenID Connect / OAuth2 Authorization Server with SAML2 federated IdP",
-    "description": "This implementation is based on the OAuth2 library available from github.com/bshaffer... with an extension for supporting SAML2 federated Single-Sign-On. The SAML2 authentication support is implemented via the SimpleSAMLphp package.\n\nThis specification describes in the \"Token Management\" section the OAuth2-related endpoints for creating, revoking and verification of tokens; in the \"User Info\" section the OpenID Connect-related UserInfo endpoint; in the \"Personal Data\" section the GDPR-related endpoints.\n\nThe endpoints in this specification are derived from a number of RFCs and external documents:\n\n  * The OAuth2 framework - [RFC 6749][rfc6749]\n  * The OAuth 2.0 Authorization Framework: Bearer Token Usage - [RFC 6750][rfc6750] \n  * OAuth 2.0 Token Introspection - [RFC 7662][rfc7662]\n  * OAuth 2 Token Revocation - [RFC 7009][rfc7009]\n  * OpenID Connect - [Community Standard][oidc]\n\nThe OpenID configuration can be found at `/.well-known/openid-configuration`.\n\nFor the OAuth2 Authorization Code workflow, the following Authorization URL is available:\n  * `/saml/login.html` is the URL with which developers can login (via SAML2) to test the authorization code flow;\n\n [rfc6749]: https://tools.ietf.org/html/rfc6749\n [rfc6750]: https://tools.ietf.org/html/rfc6750\n [rfc7009]: https://tools.ietf.org/html/rfc7009\n [rfc7662]: https://tools.ietf.org/html/rfc7662\n [oidc]: https://openid.net/specs/openid-connect-core-1_0.html\n",
+    "description": "This implementation is based on the OAuth2 library available from github.com/bshaffer... with an extension for supporting SAML2 federated Single-Sign-On. The SAML2 authentication support is implemented via the SimpleSAMLphp package.\n\nThis specification describes in the \"Token Management\" section the OAuth2-related endpoints for creating, revoking and verification of tokens; in the \"User Info\" section the OpenID Connect-related UserInfo endpoint; in the \"Personal Data\" section the GDPR-related endpoints; and in the \"Application Management\" section the application registration and authorization related endpoints.\n\nThe endpoints in this specification are derived from a number of RFCs and external documents:\n\n  * The OAuth2 framework - [RFC 6749][rfc6749]\n  * The OAuth 2.0 Authorization Framework: Bearer Token Usage - [RFC 6750][rfc6750] \n  * OAuth 2.0 Token Introspection - [RFC 7662][rfc7662]\n  * OAuth 2 Token Revocation - [RFC 7009][rfc7009]\n  * OpenID Connect - [Community Standard][oidc]\n\nThe OpenID configuration can be found at `/.well-known/openid-configuration`.\n\n [rfc6749]: https://tools.ietf.org/html/rfc6749\n [rfc6750]: https://tools.ietf.org/html/rfc6750\n [rfc7009]: https://tools.ietf.org/html/rfc7009\n [rfc7591]: https://tools.ietf.org/html/rfc7591\n [rfc7592]: https://tools.ietf.org/html/rfc7592\n [rfc7662]: https://tools.ietf.org/html/rfc7662\n [oidc]: https://openid.net/specs/openid-connect-core-1_0.html\n",
     "contact": {
       "name": "Secure Dimensions GmbH",
       "url": "https://www.secure-dimensions.de",
@@ -12,7 +12,7 @@
   },
   "servers": [
     {
-      "url": "https://as.sddi.secure-dimensions.de"
+      "url": "http://localhost"
     }
   ],
   "tags": [
@@ -34,7 +34,7 @@
       "get": {
         "operationId": "oauth2Authorize",
         "summary": "The authorization endpoint for the 'authorization_code' workflow.",
-        "description": "## Specification\nThis is the [Authorization Endpoint][RFC 6749 §3.1], used as part of the [Authorization Code Grant][RFC 6749 §4.1].\n\n## Documentation notes\nThis endpoint is documented here mostly in order to document its\nparameters.\n\n [RFC 6749 §3.1]: https://tools.ietf.org/html/rfc6749#section-3.1\n [RFC 6749 §4.1]: https://tools.ietf.org/html/rfc6749#section-4.1\n",
+        "description": "## Specification\nThis is the [Authorization Endpoint][RFC 6749 §3.1], used as part of the [Authorization Code Grant][RFC 6749 §4.1].\n\n## Documentation notes\nFor executing the Authorization Code flow, you must have an active authentication session. This can be achieved by logging in via the `/saml/login` [endpoint](/saml/login). After a successful login, your personal data that was collected from the IdP is displayed.\n\n [RFC 6749 §3.1]: https://tools.ietf.org/html/rfc6749#section-3.1\n [RFC 6749 §4.1]: https://tools.ietf.org/html/rfc6749#section-4.1\n",
         "tags": [
           "Token Management"
         ],
@@ -154,7 +154,7 @@
         ],
         "operationId": "oauth2Token",
         "summary": "Request a new access token.",
-        "description": "## Specification\n\nThe token endpoint, as described in [RFC 6749 §3.2], is used in three cases:\n * [Client Credentials Grant][RFC 6749 §4.4]\n * [Token Refresh][RFC 6749 §6]\n * [Resource Owner Password Credentials][RFC 6749 §4.3]\n\n [RFC 6749 §3.2]: https://tools.ietf.org/html/rfc6749#section-3.2\n [RFC 6749 §4.1]: https://tools.ietf.org/html/rfc6749#section-4.1\n [RFC 6749 §4.3]: https://tools.ietf.org/html/rfc6749#section-4.3\n [RFC 6749 §4.4]: https://tools.ietf.org/html/rfc6749#section-4.4\n [RFC 6749 §6]: https://tools.ietf.org/html/rfc6749#section-6\n [RFC 7636 §4.5]: https://tools.ietf.org/html/rfc7636#section-4.3\n",
+        "description": "## Specification\n\nThe token endpoint, as described in [RFC 6749 §3.2], is implemented for these cases:\n * [Authorization Code Grant][RFC 6749 §4.1]\n * [Client Credentials Grant][RFC 6749 §4.4]\n * [Token Refresh][RFC 6749 §6]\n\n [RFC 6749 §3.2]: https://tools.ietf.org/html/rfc6749#section-3.2\n [RFC 6749 §4.1]: https://tools.ietf.org/html/rfc6749#section-4.1\n [RFC 6749 §4.4]: https://tools.ietf.org/html/rfc6749#section-4.4\n [RFC 6749 §6]: https://tools.ietf.org/html/rfc6749#section-6\n [RFC 7636 §4.5]: https://tools.ietf.org/html/rfc7636#section-4.3\n",
         "tags": [
           "Token Management"
         ],
@@ -164,21 +164,6 @@
             "application/x-www-form-urlencoded": {
               "schema": {
                 "$ref": "#/components/schemas/TokenRequest"
-              },
-              "examples": {
-                "clientCredentials": {
-                  "summary": "A client_credentials token request",
-                  "value": {
-                    "grant_type": "client_credentials"
-                  }
-                },
-                "refreshToken": {
-                  "summary": "A refresh_token token request",
-                  "value": {
-                    "grant_type": "refresh_token",
-                    "refresh_token": "97d4fbb35dab9bf5b9f90ac10b8b30c4ef6ad4026678c3a22ec9a6c89ac73624"
-                  }
-                }
               }
             }
           }
@@ -518,16 +503,13 @@
       },
       "AuthorizationCodeTokenRequest": {
         "type": "object",
+        "description": "The parameter `client_id` is not mandatory as only confidential clients can use this flow.",
         "required": [
-          "client_id",
           "grant_type",
           "code",
-          "code_verifier"
+          "redirect_uri"
         ],
         "properties": {
-          "client_id": {
-            "$ref": "#/components/schemas/ClientIdentification"
-          },
           "grant_type": {
             "type": "string",
             "enum": [
@@ -536,13 +518,11 @@
           },
           "code": {
             "type": "string",
-            "description": "The authorization code obtained by the redirection endpoint in the `code` query string parameter.",
-            "example": "2addb9e34dcc427f05fefcb045327e8a"
+            "description": "The authorization code obtained by the redirection endpoint in the `code` query string parameter."
           },
           "redirect_uri": {
             "type": "string",
-            "description": "The `redirect_uri` that was given as a parameter on the authorization endpoint.",
-            "example": "https://redirect.example.com/cb"
+            "description": "The `redirect_uri` that was given as a parameter on the authorization endpoint."
           }
         },
         "additionalProperties": false
@@ -550,13 +530,9 @@
       "ClientCredentialsTokenRequest": {
         "type": "object",
         "required": [
-          "client_id",
           "grant_type"
         ],
         "properties": {
-          "client_id": {
-            "$ref": "#/components/schemas/ClientIdentification"
-          },
           "grant_type": {
             "type": "string",
             "enum": [
@@ -565,7 +541,7 @@
           },
           "scope": {
             "type": "string",
-            "description": "The scope of the requested access token. Can be used to restrict the\nnew access token to a subset of the scope allowed to the client and\ntoken type.\n"
+            "description": "The scope of the requested access token. Can be used to restrict the new access token to a subset of the scope allowed to the client and token type."
           }
         },
         "additionalProperties": false
@@ -573,14 +549,10 @@
       "RefreshTokenTokenRequest": {
         "type": "object",
         "required": [
-          "client_id",
           "grant_type",
           "refresh_token"
         ],
         "properties": {
-          "client_id": {
-            "$ref": "#/components/schemas/ClientIdentification"
-          },
           "grant_type": {
             "type": "string",
             "enum": [
@@ -589,12 +561,11 @@
           },
           "refresh_token": {
             "type": "string",
-            "description": "The `refresh_token` previously provided to the client.",
-            "example": "97d4fbb35dab9bf5b9f90ac10b8b30c4ef6ad4026678c3a22ec9a6c89ac73624"
+            "description": "The `refresh_token` previously provided to the client."
           },
           "scope": {
             "type": "string",
-            "description": "The scope of the requested access token. Can be used to restrict the\nnew access token to a subset of the scope allowed to the client and\ntoken type.\n"
+            "description": "The scope of the requested access token. Can be used to restrict the new access token to a subset of the scope allowed to the client and token type."
           }
         },
         "additionalProperties": false

@@ -51,9 +51,9 @@ Copying the following files into the directory `/opt/discovery-service/html`:
 
 
 ## Preparing the WAYF for the first use
-Note: Make sure you have installed `curl`.
+*Note: Make sure you have installed `curl`.*
 
-Before the WAYF can be used for the first time **and** each time the list of IdPs change, the WAYF's list of IdPs must be synchronized. This is a manual process and can done via the following steps:
+Before the WAYF can be used for the first time **and** each time the list of IdPs changes, the WAYF's list of IdPs must be synchronized. This is a manual process and can done via the following steps:
 
 ````
 cd /opt/discovery-service

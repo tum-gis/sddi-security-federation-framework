@@ -39,14 +39,14 @@ $config = array(
         'sign.logout' => true,
     ),
     // This is the SAML2 SP authentication source that shall be configured to NOT request user attributes
-    'oidc-profile' => array(
+    'openid' => array(
         'saml:SP',
 
 	// this entry is different for both SPs
         'NameIDPolicy' => 'urn:oasis:names:tc:SAML:2.0:nameid-format:persistent',
 
 	// this entry is different for both SPs
-        'entityID' => 'https://' . $_SERVER['SERVER_NAME'] . '/oidc-profile',
+        'entityID' => 'https://' . $_SERVER['SERVER_NAME'] . '/openid',
 
         'discoURL' => 'https://ds.sddi.secure-dimensions.de/WAYF',
 

@@ -681,8 +681,10 @@ This feature can be enabled by leveraging the `entityID` of the IdP as value to 
 The `entityID` can be obtained from the federation metadata, supported by the Authorization Server.
 
 ````
-[AUTHORIZATION_ENDPOINT?client\_id=952cf7e3-be59-d56e-1177-7cde1233e920&response\_type=id\_token%20token&redirect\_uri=http://127.0.0.1:4711/web-app/&state=952cf7e3-be59-d56e-1177-7cde1233e920&scope=saml%20openid%20email%20profile&login\_hint=https://google-idp.sddi.secure-dimensions.de/simplesaml/saml2/idp/metadata.php&](AUTHORIZATION_ENDPOINT?client_id=952cf7e3-be59-d56e-1177-7cde1233e920&response_type=id_token%20token&redirect_uri=http://127.0.0.1:4711/web-app/&state=952cf7e3-be59-d56e-1177-7cde1233e920&scope=saml%20openid%20email%20profile&login_hint=https://google-idp.sddi.secure-dimensions.de/simplesaml/saml2/idp/metadata.php&)
+[AUTHORIZATION_ENDPOINT?client\_id=952cf7e3-be59-d56e-1177-7cde1233e920&response\_type=id\_token%20token&redirect\_uri=http://127.0.0.1:4711/web-app/&state=952cf7e3-be59-d56e-1177-7cde1233e920&scope=saml%20openid%20email%20profile&login\_hint=entityID&](AUTHORIZATION_ENDPOINT?client_id=952cf7e3-be59-d56e-1177-7cde1233e920&response_type=id_token%20token&redirect_uri=http://127.0.0.1:4711/web-app/&state=952cf7e3-be59-d56e-1177-7cde1233e920&scope=saml%20openid%20email%20profile&login_hint=entityID&)
 ````
+
+*Note: This test requires you to adopt the `entityID`!*
 
 => <span style="color:green">Test passed</span>
 

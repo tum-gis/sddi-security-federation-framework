@@ -21,9 +21,6 @@ use phpseclib\Crypt\AES;
 use SimpleSAML\Session;
 use \SAML2\XML\saml\NameIDType;
 
-//use OAuth2\Controller\TokenControllerInterface;
-//use OAuth2\Controller\TokenController;
-
 use SAML2\Controller\TokenControllerInterface;
 use SAML2\Controller\TokenController;
 
@@ -122,68 +119,81 @@ $clientAssertionType = new HttpBasic($server->getStorage('client'), $config);
 $tokenController = new SAML2\Controller\TokenController($accessToken, $server->getStorage('client'), $grantTypes, $clientAssertionType, $scopeUtil);
 $server->setTokenController($tokenController);
 
-// convenience function
+// convenience function maps the SAML attributes to OpenID Connect claims array.
 function attributes2claims($attributes)
 {
-  $email = NULL;
-  if (isset($attributes['mail']))
-    $email = $attributes['mail'][0];
-  else if (isset($attributes['email']))
-    $email = $attributes['email'][0];
-  else
-    $email = NULL;
+      $email = NULL;
+      if (isset($attributes['mail']))
+        $email = $attributes['mail'][0];
+      else if (isset($attributes['email']))
+        $email = $attributes['email'][0];
+      else
+        $email = NULL;
 
-  $claims = array();
-  $claims['subject_id'] = (isset($attributes['subject-id'])? $attributes['subject-id'][0] : null);
-  $claims['name'] = (isset($attributes['cn']) ? $attributes['cn'][0] : null);
-  $claims['family_name'] = (isset($attributes['sn']) ? $attributes['sn'][0] : null);
-  $claims['given_name'] = (isset($attributes['givenName']) ? $attributes['givenName'][0] : null);
-  $claims['middle_name'] = (isset($attributes['middleName']) ? $attributes['middleName'][0] : null);
-  $claims['nickname'] = (isset($attributes['nickname']) ? $attributes['nickname'][0] : null);
-  $claims['preferred_username'] = (isset($attributes['displayName']) ? $attributes['displayName'][0] : null);
-  $claims['profile'] = (isset($attributes['profile']) ? $attributes['profile'][0] : null);
-  $claims['picture'] = (isset($attributes['picture']) ? $attributes['picture'][0] : null);
-  $claims['website'] = (isset($attributes['website']) ? $attributes['website'][0] : null);
-  $claims['gender'] = (isset($attributes['gender']) ? $attributes['gender'][0] : null);
-  $claims['age'] = (isset($attributes['age']) ? $attributes['age'][0] : null);
-  $claims['birthdate'] = (isset($attributes['birthdate']) ? $attributes['birthdate'][0] : null);
-  $claims['zoneinfo'] = (isset($attributes['zoneinfo']) ? $attributes['zoneinfo'][0] : null);
-  $claims['locale'] = (isset($attributes['locale']) ? $attributes['locale'][0] : null);
-  $claims['updated_at'] = (isset($attributes['updatedAt']) ? $attributes['updatedAt'][0] : null);
-  $claims['email'] = $email;
-  $claims['email_verified'] = (isset($attributes['emailVerified']) ? $attributes['emailVerified'][0] : null);
-  $claims['affiliation'] = (isset($attributes['affiliation']) ? $attributes['affiliation'][0] : null);
-  $claims['profession'] = (isset($attributes['profession']) ? $attributes['profession'][0] : null);
-  $claims['idp_country'] = (isset($attributes['c']) ? $attributes['c'][0] : null);
-  $claims['idp_country'] = (isset($attributes['idpCountry']) ? $attributes['idpCountry'][0] : null);
-  $claims['idp_name'] = (isset($attributes['schacHomeOrganization']) ? $attributes['schacHomeOrganization'][0] : null);
-  $claims['idp_name'] = (isset($attributes['idpName']) ? $attributes['idpName'][0] : null);
-  $claims['idp_origin'] = (isset($attributes['businessCategory']) ? $attributes['businessCategory'][0] : null);
-  $claims['idp_origin'] = (isset($attributes['idpOrigin']) ? $attributes['idpOrigin'][0] : null);
-  $claims['home_town'] = (isset($attributes['homeTown']) ? $attributes['homeTown'][0] : null);
+      $claims = array();
+      $claims['subject_id'] = (isset($attributes['subject-id'])? $attributes['subject-id'][0] : null);
+      $claims['name'] = (isset($attributes['cn']) ? $attributes['cn'][0] : null);
+      $claims['family_name'] = (isset($attributes['sn']) ? $attributes['sn'][0] : null);
+      $claims['given_name'] = (isset($attributes['givenName']) ? $attributes['givenName'][0] : null);
+      $claims['middle_name'] = (isset($attributes['middleName']) ? $attributes['middleName'][0] : null);
+      $claims['nickname'] = (isset($attributes['nickname']) ? $attributes['nickname'][0] : null);
+      $claims['preferred_username'] = (isset($attributes['displayName']) ? $attributes['displayName'][0] : null);
+      $claims['profile'] = (isset($attributes['profile']) ? $attributes['profile'][0] : null);
+      $claims['picture'] = (isset($attributes['picture']) ? $attributes['picture'][0] : null);
+      $claims['website'] = (isset($attributes['website']) ? $attributes['website'][0] : null);
+      $claims['gender'] = (isset($attributes['gender']) ? $attributes['gender'][0] : null);
+      $claims['age'] = (isset($attributes['age']) ? $attributes['age'][0] : null);
+      $claims['birthdate'] = (isset($attributes['birthdate']) ? $attributes['birthdate'][0] : null);
+      $claims['zoneinfo'] = (isset($attributes['zoneinfo']) ? $attributes['zoneinfo'][0] : null);
+      $claims['locale'] = (isset($attributes['locale']) ? $attributes['locale'][0] : null);
+      $claims['updated_at'] = (isset($attributes['updatedAt']) ? $attributes['updatedAt'][0] : null);
+      $claims['email'] = $email;
+      $claims['email_verified'] = (isset($attributes['emailVerified']) ? $attributes['emailVerified'][0] : null);
+      $claims['affiliation'] = (isset($attributes['affiliation']) ? $attributes['affiliation'][0] : null);
+      $claims['profession'] = (isset($attributes['profession']) ? $attributes['profession'][0] : null);
+      $claims['idp_country'] = (isset($attributes['c']) ? $attributes['c'][0] : null);
+      $claims['idp_country'] = (isset($attributes['idpCountry']) ? $attributes['idpCountry'][0] : null);
+      $claims['idp_name'] = (isset($attributes['schacHomeOrganization']) ? $attributes['schacHomeOrganization'][0] : null);
+      $claims['idp_name'] = (isset($attributes['idpName']) ? $attributes['idpName'][0] : null);
+      $claims['idp_origin'] = (isset($attributes['businessCategory']) ? $attributes['businessCategory'][0] : null);
+      $claims['idp_origin'] = (isset($attributes['idpOrigin']) ? $attributes['idpOrigin'][0] : null);
+      $claims['home_town'] = (isset($attributes['homeTown']) ? $attributes['homeTown'][0] : null);
 
-  return $claims;
+      return $claims;
 }
 
-// convenience function
+// convenience function that returns the user identifier
+/**
+     * Determine the username.
+     *
+     * After the user has logged in, it is not certain that a unique identifier exists.
+     * However, a unique identifier is required to success if application is registered including scope 'openid'
+     * and using auth_id 'openid'.
+     *
+     * @as \SimpleSAML\Auth\Simple $as      - The SimpleSAML SP instance
+     * @return String                       - The unique username or NULL
+     */
 function getUsername($as)
 {
-        $attributes = $as->getAttributes();
-        if (isset($attributes['eduPersonTargetedID']))
-        {
-            $doc = new DOMDocument();
-            $doc->loadXML($attributes['eduPersonTargetedID'][0]);
-            $nameID = $doc->getElementsByTagName('NameID');
-            foreach ($nameID as $node)
-		$username = $as->getAuthData('saml:sp:IdP') . '!' . $node->nodeValue;
+    $attributes = $as->getAttributes();
+    $sp = $as->getAuthSource();
+    if (isset($attributes['eduPersonTargetedID']))
+    {
+        $doc = new DOMDocument();
+        $doc->loadXML($attributes['eduPersonTargetedID'][0]);
+        $nameID = $doc->getElementsByTagName('NameID');
+        foreach ($nameID as $node)
+            $username = $as->getAuthData('saml:sp:IdP') . '!' . $node->nodeValue;
 
-        }
-        elseif(isset($attributes['subject-id']))
-            $username = $attributes['subject-id'][0];
-        else
-            $username = $as->getAuthData('saml:sp:IdP') . '!anonymous';
-
-	return $username;
+    }
+    elseif(isset($attributes['subject-id']))
+        $username = $attributes['subject-id'][0];
+    elseif ($sp->getAuthId() == 'oauth')
+        $username = $as->getAuthData('saml:sp:IdP') . '!anonymous';
+    else
+        $username = null;
+    
+    return $username;
 }
 
 /*
@@ -207,7 +217,7 @@ $app->GET('/oauth/authorize', function($request, $psr_response, $args=null) use 
     if (!in_array('openid',$scopes) && !in_array('profile',$scopes) && !in_array('email',$scopes))
         $auth_id = 'oauth';
     else
-        $auth_id = 'oidc-profile';
+        $auth_id = 'openid';
 
     $this->logger->addDebug("Authenticating with " . $auth_id);
     
@@ -225,6 +235,15 @@ $app->GET('/oauth/authorize', function($request, $psr_response, $args=null) use 
     $attributes['idpIdentifier'] = array($idp);
 
     $username = getUsername($as);
+    $this->logger->addDebug("username: " . $username);
+    if ($username == null)
+    {
+        // The IdP did not return any information suitable to identify the user.
+        $payload = array();
+        $payload['title'] = "Application Authorization Error";
+        $payload['error_message'] = 'Your organization has not returned sufficient information to identify you. But that is required to continue.';
+        return $this->renderer->render($psr_response, "/error.php", array('payload' => $payload));
+    }
 
     $response = new OAuth2\Response();
 
@@ -254,14 +273,14 @@ $app->GET('/oauth/authorize', function($request, $psr_response, $args=null) use 
   if ((strstr($scope, 'profile') === FALSE) and (strstr($scope, 'email') === FALSE))
   {
 	// The application has no personal data scopes, so the user must no approve the processing of personal information
-        $server->handleAuthorizeRequest($request, $response, true, $username, $auth_id);
-        return $psr_response->withRedirect($response->getHttpHeader('Location'));
+    $server->handleAuthorizeRequest($request, $response, true, $username, $auth_id);
+    return $psr_response->withRedirect($response->getHttpHeader('Location'));
 
   }
   else if ($server->getStorage('user_credentials')->checkUserConsent($username, $client_id))
   {
-        // The user has previously authorized the application
-        $server->handleAuthorizeRequest($request, $response, true, $username, $auth_id);
+    // The user has previously authorized the application
+    $server->handleAuthorizeRequest($request, $response, true, $username, $auth_id);
 	return $psr_response->withRedirect($response->getHttpHeader('Location'));
   }
   else
@@ -303,7 +322,7 @@ $app->POST('/oauth/authorize', function($request, $psr_response, $args = null) u
     if (!in_array('openid',$scopes) && !in_array('profile',$scopes) && !in_array('email',$scopes))
         $auth_id = 'oauth';
     else
-        $auth_id = 'oidc-profile';
+        $auth_id = 'openid';
 
     $this->logger->addDebug("Authenticating with " . $auth_id);
 
@@ -322,6 +341,15 @@ $app->POST('/oauth/authorize', function($request, $psr_response, $args = null) u
 
     $username = getUsername($as);
     $this->logger->addDebug("username: " . $username);
+    if ($username == null)
+    {
+        // The IdP did not return any information suitable to identify the user.
+        $payload = array();
+        $payload['title'] = "Application Authorization Error";
+        $payload['error_message'] = 'Your organization has not returned sufficient information to identify you. But that is required to continue.';
+        return $this->renderer->render($psr_response, "/error.php", array('payload' => $payload));
+    }
+
 
     $client_id = $request->request('client_id');
 
@@ -546,7 +574,7 @@ $app->POST('/oauth/tokeninfo', function(Request $request, Response $response) us
 	{
 	  $data = array();
 	  $data['error'] = 'invalid_token';
-          $data['error_description'] = 'The provided access token in the HTTP header Authorization is invalid';
+          $data['error_description'] = 'The provided access token in the HTTP Authorization is invalid';
           return $response->withJson($data, 401);
 	}
 
@@ -625,14 +653,14 @@ $app->GET('/saml/sessioninfo', function(Request $request, Response $response) us
     }
 
     /* Second we collect attributes from the auth source 'openid' */ 
-    $as = new \SimpleSAML\Auth\Simple('oidc-profile');
+    $as = new \SimpleSAML\Auth\Simple('openid');
     if ($as->isAuthenticated())
     {
         $attributes = $as->getAttributes();
 
         $attributes['username'] = getUsername($as);
         $attributes['entityId'] = $as->getAuthData('saml:sp:IdP');
-	$attributes['auth_id'] = 'oidc-profile';
+	$attributes['auth_id'] = 'openid';
         array_push($sessioninfo, $attributes);
     }
 
@@ -686,7 +714,7 @@ $app->GET('/saml/logout', function(Request $request, Response $response) use ($s
         if ($endpoint === false) {
             $payload = array();
             $payload['title'] = "Logout not possible";
-            $payload['error_message'] = 'It is NOT possible to log you out from the Identity Provider becaue Logout is not supported!i. You MUST close the Browser to invalide the login!';
+            $payload['error_message'] = 'It is NOT possible to log you out from the Identity Provider becaue logout is not supported! You MUST close the Browser to invalide the login session!';
             return $this->renderer->render($response, "/error.php", array('payload' => $payload));
         }   
 
@@ -698,7 +726,7 @@ $app->GET('/saml/logout', function(Request $request, Response $response) use ($s
 
 	// A user can have one or two sessions with the IdP
 	$oauth = new \SimpleSAML\Auth\Simple('oauth');
-	$openid = new \SimpleSAML\Auth\Simple('oidc-profile');
+	$openid = new \SimpleSAML\Auth\Simple('openid');
 
 	if ($oauth->isAuthenticated() && !$openid->isAuthenticated()){
 	    // Only a session with "oauth" exists
@@ -742,7 +770,7 @@ $app->GET('/oauth/logout', function(Request $request, Response $response) use ($
     {
         $payload = array();
         $payload['title'] = 'Parameter code and token missing';
-        $payload['error_message'] = "OAuth2 based logout requires a code or access token parameter in request";
+        $payload['error_message'] = "OAuth2 based logout requires a code or access token parameter in request.";
         return $this->renderer->render($response, "/error.php", array('payload' => $payload));
     }
 
@@ -841,7 +869,7 @@ $app->GET('/logoutcomplete', function(Request $request, Response $response) use 
         } else {
             /* Logout failed. Tell the user to close the browser. */
             $payload['title'] = "Logout failure";
-            $payload['error_message'] = 'We were unable to log you out of all your sessions. To be completely sure that you are logged out, you need to close your web browser.';
+            $payload['error_message'] = 'We were unable to log you out of all your sessions. To be completely sure that you are logged out, you need to close your Browser.';
             return $this->renderer->render($response, "/error.php", array('payload' => $payload));
         }
     }
@@ -868,8 +896,8 @@ $app->GET('/registerapps', function(Request $request, Response $response) use ($
 $app->POST('/registerapps', function(Request $request, Response $response) use ($server, $app) {
     $this->logger->addDebug("GET /registerapps");
 
-    // The user must have a unique identifier to manually register an application. => We must use the 'oidc-profile' auth source
-    $as = new \SimpleSAML\Auth\Simple('oidc-profile');
+    // The user must have a unique identifier to manually register an application. => We must use the 'openid' auth source
+    $as = new \SimpleSAML\Auth\Simple('openid');
     $as->requireAuth();
     $attributes = $as->getAttributes();
     $idp = $as->getAuthData('saml:sp:IdP');
@@ -877,12 +905,12 @@ $app->POST('/registerapps', function(Request $request, Response $response) use (
     $attributes['idpIdentifier'] = array($idp);
 
     $username = getUsername($as);
-    if (!isset($username) || strpos($username, 'anonymous') > 0)
+    if ($username == null)
     {
         $this->logger->addError("Failed attempt to register with username: " . $username);
         $payload = array();
         $payload['title'] = "Application Registration Error";
-        $payload['error_message'] = "You cannot register an appliction because your Home Organization did not identify you. We appologize for the inconvenience.";
+        $payload['error_message'] = "You cannot register an appliction because your Organization did not identify you. We appologize for the inconvenience.";
         return $this->renderer->render($response, "/error.php", array('payload' => $payload));
     }
 
@@ -1041,8 +1069,8 @@ $app->POST('/registerapps', function(Request $request, Response $response) use (
 $app->GET('/listapps', function(Request $request, Response $response) use ($server, $app) {
     $this->logger->addDebug("GET /listapps");
 
-    // The user must have a unique identifier to list his application(s). => We must use the 'oidc-profile' auth source
-    $as = new \SimpleSAML\Auth\Simple('oidc-profile');
+    // The user must have a unique identifier to list his application(s). => We must use the 'openid' auth source
+    $as = new \SimpleSAML\Auth\Simple('openid');
     $as->requireAuth();
     $attributes = $as->getAttributes();
     $idp = $as->getAuthData('saml:sp:IdP');
@@ -1051,8 +1079,9 @@ $app->GET('/listapps', function(Request $request, Response $response) use ($serv
 
     $username = getUsername($as);
     $this->logger->addDebug("username: " . $username);
-
-    $this->logger->addDebug("GET /listapps");
+    if ($username == null)
+        return $this->renderer->render($response, "/listapps.php", array('secret' => $server->getConfig('secret'), 'client_details' => array()));
+    
     $storage = $server->getStorage('client_credentials');
 
     $client_details = $storage->getUserClientsDetails($username);
@@ -1064,8 +1093,8 @@ $app->GET('/listapps', function(Request $request, Response $response) use ($serv
 $app->GET('/authorizedapps', function(Request $request, Response $response) use ($server, $app) {
     $this->logger->addDebug("GET /authorizedapps");
 
-    // The user must have a unique identifier to list authorized application(s). => We must use the 'oidc-profile' auth source
-    $as = new \SimpleSAML\Auth\Simple('oidc-profile');
+    // The user must have a unique identifier to list authorized application(s). => We must use the 'openid' auth source
+    $as = new \SimpleSAML\Auth\Simple('openid');
     $as->requireAuth();
     $attributes = $as->getAttributes();
     $idp = $as->getAuthData('saml:sp:IdP');
@@ -1074,7 +1103,9 @@ $app->GET('/authorizedapps', function(Request $request, Response $response) use 
 
     $username = getUsername($as);
     $this->logger->addDebug("username: " . $username);
-
+    if ($username == null)
+        return $this->renderer->render($response, "/authorizedapps.php", array('consent_details' => array()));
+    
     $storage = $server->getStorage('user_credentials');
     $consent_details = $storage->getUserConsent($username);
 
@@ -1093,8 +1124,8 @@ $app->DELETE('/authorizedapps/{client_id}', function(Request $request, Response 
        	return $this->renderer->render($psr_response, "/error.php", array('payload' => $payload));
     }
 
-    // The user must have a unique identifier to delete authorization for application(s). => We must use the 'oidc-profile' auth source
-    $as = new \SimpleSAML\Auth\Simple('oidc-profile');
+    // The user must have a unique identifier to delete authorization for application(s). => We must use the 'openid' auth source
+    $as = new \SimpleSAML\Auth\Simple('openid');
     $as->requireAuth();
     $attributes = $as->getAttributes();
     $idp = $as->getAuthData('saml:sp:IdP');
@@ -1103,7 +1134,10 @@ $app->DELETE('/authorizedapps/{client_id}', function(Request $request, Response 
 
     $username = getUsername($as);
     $this->logger->addDebug("username: " . $username);
-
+    if ($username == null)
+        return $this->renderer->render($response, "/authorizedapps.php", array('consent_details' => array()));
+    
+    
     $storage = $server->getStorage('user_credentials');
 
     $storage->revokeUserConsent($username, $args['client_id']);
@@ -1124,8 +1158,8 @@ $app->DELETE('/logoutapps/{client_id}', function(Request $request, Response $res
         return $this->renderer->render($psr_response, "/error.php", array('payload' => $payload));
     }
 
-    // The user must have a unique identifier to logout from a device running an application(s). => We must use the 'oidc-profile' auth source
-    $as = new \SimpleSAML\Auth\Simple('oidc-profile');
+    // The user must have a unique identifier to logout from a device running an application(s). => We must use the 'openid' auth source
+    $as = new \SimpleSAML\Auth\Simple('openid');
     $as->requireAuth();
     $attributes = $as->getAttributes();
     $idp = $as->getAuthData('saml:sp:IdP');
@@ -1134,6 +1168,8 @@ $app->DELETE('/logoutapps/{client_id}', function(Request $request, Response $res
 
     $username = getUsername($as);
     $this->logger->addDebug("username: " . $username);
+    if ($username == null)
+        return $this->renderer->render($response, "/authorizedapps.php", array('consent_details' => array()));
 
     $storage = $server->getStorage('refresh_token');
 
