@@ -1,6 +1,8 @@
 # SDDI - Security Components as Open Source
 The contents of the sub-directories is the deliverable for the "Werkvertrag" between the Technische University Munich and Secure Dimensions GmbH dated 28.10.2019.
 
+### Note: This repository is currently being tested and subject to change.
+
 The software is provided "AS IS" as expressed in the attached LICENSE.
 
 * [AS](AS/authorization-server/README.md): This directory contains the Authorization Server as Open Source based on the MIT license and installation instructions to deploy the software.
