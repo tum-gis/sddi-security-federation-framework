@@ -1,7 +1,5 @@
 # SDDI - Security Components as Open Source
-The contents of the sub-directories is the deliverable for the "Werkvertrag" between the Technische University Munich and Secure Dimensions GmbH dated 28.10.2019.
-
-### Note: This repository is currently being tested and subject to change.
+This work was delivered as part of the project [Smart District Data Infrastructure (SDDI)](https://www.lrg.tum.de/en/gis/projects/smart-district-data-infrastructure/) funded by [Climate-KIC](https://www.climate-kic.org/) of the [European Institute of Innovation and Technology (EIT)](https://eit.europa.eu/).
 
 The software is provided "AS IS" as expressed in the attached LICENSE.
 
