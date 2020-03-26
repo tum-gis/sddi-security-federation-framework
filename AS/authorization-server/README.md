@@ -73,7 +73,7 @@ To build a docker container for CENTOS 7, run the following commands (see [link]
 +   Execute the container and use `bash`:
     ```bash
     docker ps -a # search for the id of the docker container
-    docker exec <docker_container_id> bash
+    docker exec -it <docker_container_id> bash
     ```
 ------------
 
