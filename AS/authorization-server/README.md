@@ -31,6 +31,52 @@ This documentation leverages Centos 7 to describe the installation of OS package
 ### Preperation
 The following installation is based on a CENTOS 7 image.
 
+------------
+##### Note:
+To build a docker container for CENTOS 7, run the following commands (see [link](https://serverfault.com/questions/824975/failed-to-get-d-bus-connection-operation-not-permitted)):
+
++   Pull the docker image `centos:7` 
+    ```
+    docker pull centos:7
+    ```
+    The pulled image should be called `centos7-systemd`.
+  
++   Create a `dockerfile` with the following contents (see [link](https://github.com/docker-library/docs/tree/master/centos#systemd-integration)):
+    ```bash
+    FROM centos:7
+    MAINTAINER "Yourname" <youremail@address.com>
+    ENV container docker
+    RUN yum -y update; yum clean all
+    RUN yum -y install systemd; yum clean all; \
+    (cd /lib/systemd/system/sysinit.target.wants/; for i in *; do [ $i == systemd-tmpfiles-setup.service ] || rm -f $i; done); \
+    rm -f /lib/systemd/system/multi-user.target.wants/*;\
+    rm -f /etc/systemd/system/*.wants/*;\
+    rm -f /lib/systemd/system/local-fs.target.wants/*; \
+    rm -f /lib/systemd/system/sockets.target.wants/*udev*; \
+    rm -f /lib/systemd/system/sockets.target.wants/*initctl*; \
+    rm -f /lib/systemd/system/basic.target.wants/*;\
+    rm -f /lib/systemd/system/anaconda.target.wants/*;
+    VOLUME [ "/sys/fs/cgroup" ]
+    CMD ["/usr/sbin/init"]
+    ```
+
++   Build the container:
+    ```bash
+    docker build --rm -t centos7-systemd - < dockerfile
+    ```
+    
++   Run the container:
+    ```bash
+    docker run --privileged -d -ti -e container=docker  -v /sys/fs/cgroup:/sys/fs/cgroup  centos7-systemd /usr/sbin/init
+    ```
+
++   Execute the container and use `bash`:
+    ```bash
+    docker ps -a # search for the id of the docker container
+    docker exec <docker_container_id> bash
+    ```
+------------
+
 After installing the 'raw' OS, it is good practise to update the packages:
 
 ````
