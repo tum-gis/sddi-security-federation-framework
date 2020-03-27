@@ -195,6 +195,17 @@ cd /opt
 git clone https://github.com/securedimensions/authorization-server.git
 ````
 
+------------
+##### Note:
+Changed to this Github repository:
+
+````
+git clone https://github.com/tum-gis/sddi-security-federation-framework
+````
+
+Once completed, please change into the directory `/opt/sddi-security-federation-framework/AS/authorization-server`.
+------------
+
 Once completed, please change into the directory `/opt/authorization-server`. This is the home directory for all further installation and will be referred to via `...` in the subsequent documentation.
 
 Before you execute the PHP Composer, please make sure you have installed `unzip`
@@ -257,7 +268,7 @@ Create the Authorization Server database (`samlas` for this documentation).
 cd ...
 su postgres
 createuser php;
-cratedb samlas -O php;
+createdb samlas -O php;
 psql -c "ALTER user php WITH ENCRYPTED PASSWORD 'password'";
 psql -U php -W samlas
 samlas=# \q
