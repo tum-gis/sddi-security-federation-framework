@@ -197,13 +197,13 @@ git clone https://github.com/securedimensions/authorization-server.git
 
 ------------
 ##### Note:
-Changed to this Github repository:
+Changed to a new Github repository:
 
 ````
 git clone https://github.com/tum-gis/sddi-security-federation-framework
+cp -r sddi-security-federation-framework/AS/authorization-server/ authorization-server/
 ````
 
-Once completed, please change into the directory `/opt/sddi-security-federation-framework/AS/authorization-server`.
 ------------
 
 Once completed, please change into the directory `/opt/authorization-server`. This is the home directory for all further installation and will be referred to via `...` in the subsequent documentation.
@@ -224,7 +224,7 @@ This will download the required PHP packages to run the Authorization Server inc
 
 
 ## Configuration
-Different software packages must co=operatoe to make the AS work:
+Different software packages must cooperate to make the AS work:
 
 * Database
 * Apache Web Server
