@@ -9,6 +9,17 @@ To setup the SAML2 Discovery Service (or WAYF) is basically split into three ste
 The SWITCHwayf package is Open Source and can be downloaded fron the SWITCH Gitlab:
 [SWITCHwayf-v1.21](https://gitlab.switch.ch/aai/SWITCHwayf/-/archive/v1.21/SWITCHwayf-v1.21.tar.gz)
 
+----------------------
+#### Note
+The SWITCHwayf package can also be downloaded by cloning this Github repository:
+````
+yum -y install git
+git clone https://github.com/tum-gis/sddi-security-federation-framework
+cp -r sddi-security-federation-framework/DS/ discovery-service/
+````
+
+----------------------
+
 ## Installation and Basic Configuration
 For this installation we will use the following directory structure:
 
