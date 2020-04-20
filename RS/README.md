@@ -20,6 +20,18 @@ mkdir -p /usr/local/lib64/perl5/SD
 
 The final stept is to copy (scp) the `OAuthnBearerHandler.pm` file into the created directory.
 
+----------------
+#### Note
+This can be achieved by cloning the Github Repository and copying the `OAuthnBearerHandler.pm`.
+
+````
+yum -y install git
+git clone https://github.com/tum-gis/sddi-security-federation-framework
+cp sddi-security-federation-framework/RS/ /usr/local/lib64/perl5/SD/
+````
+
+----------------
+
 ## Configuration
 The activation of the `OAuthnBearerHandler` and its configuration can take place in the Apache configuration file. The following example illustrates that:
 
