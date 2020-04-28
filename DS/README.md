@@ -64,6 +64,11 @@ Copying the following files into the directory `/opt/discovery-service/html`:
 ## Preparing the WAYF for the first use
 *Note: Make sure you have installed `curl`.*
 
+In order to compile the list of IdPs, you need to download the following SAML2 metadata files:
+
+* Google IdP: You can download the SAML2 metadata URL via the URL, specific for your installation. The URL is displayed in the SimpleSAMLphp GUI: <host>/simplesaml/module.php/core/frontpage_federation.php
+* eduGain: You can download this file from the DFN repository: `curl http://www.aai.dfn.de/fileadmin/metadata/dfn-aai-edugain+idp-metadata.xml`
+
 Before the WAYF can be used for the first time **and** each time the list of IdPs changes, the WAYF's list of IdPs must be synchronized. This is a manual process and can done via the following steps:
 
 ````
