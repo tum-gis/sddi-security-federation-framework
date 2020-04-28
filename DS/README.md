@@ -78,6 +78,7 @@ php createIDProviderConfig.php metadata.xml > html/IDProvider.conf.php
 cd html
 php readMetadata.php
 ````
+*Note: Please make sure that you have adopted the `compose_metadata.sh` file to relect the file names for the SAML2 metadata (lines 14 and 15).*
 
 ## Test
 Once the configuration is complete, you can open the WAYF in a Web Browser and check if all expected IdP organizations are listed. The URL to use is `https://<your domain name for the DS>/WAYF`. 
