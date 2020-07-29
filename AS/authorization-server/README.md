@@ -171,6 +171,7 @@ yum install postgresql11-server postgresql11 postgresql11-contrib  -y
 /usr/pgsql-11/bin/postgresql-11-setup initdb
 systemctl enable postgresql-11.service
 systemctl start postgresql-11.service
+yum install oidentd
 ````
 
 Modify local access:
@@ -179,7 +180,7 @@ Modify local access:
 vi /var/lib/pgsql/11/data/pg_hba.conf
 ````
 
-Modify line `local   all             all                                     peer` to `local   all             all                                     md5`.
+Modify line `local   all             all                                     peer` to `local   all             all                                     md5` and add line `host       samlas                  php        127.0.0.1/32                      md5`.
 
 ### Install the Authorization Server
 To download a copy of the AS code, simply use `git clone`. Make sure you have installed `git`.
