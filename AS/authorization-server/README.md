@@ -193,14 +193,6 @@ Then run the command below in a terminal:
 
 ````
 cd /opt
-git clone https://github.com/securedimensions/authorization-server.git
-````
-
-------------
-##### Note:
-Changed to a new Github repository:
-
-````
 git clone https://github.com/tum-gis/sddi-security-federation-framework
 cp -r sddi-security-federation-framework/AS/authorization-server/ authorization-server/
 ````
