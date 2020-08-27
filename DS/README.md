@@ -6,7 +6,7 @@ To setup the SAML2 Discovery Service (or WAYF) is basically split into three ste
 * Apply the SDDI specific configuration
 
 ## Download from SWITCH gitlab
-The SWITCHwayf package is Open Source and can be downloaded fron the SWITCH Gitlab:
+The SWITCHwayf package is Open Source and can be downloaded from the SWITCH Gitlab:
 [SWITCHwayf-v1.21](https://gitlab.switch.ch/aai/SWITCHwayf/-/archive/v1.21/SWITCHwayf-v1.21.tar.gz)
 
 ----------------------
