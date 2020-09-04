@@ -15,3 +15,4 @@ The test cases for ensuring the correct functioning of the Authorization Server 
 
 31.12.2019 - Secure Dimensions GmbH
 
+To easily follow this Read-Me it is helpfull to be familiar with the usage of Docker and the Linux Command Line. A good starting point for Docker is the [Quickstart](https://docs.docker.com/get-started/) in the Docker documentation. For the Linux Command Line there are the following tutorials: [Console Commands](https://ubuntu.com/tutorials/command-line-for-beginner), [Basic Vim Commands](https://linuxhandbook.com/basic-vim-commands/).
