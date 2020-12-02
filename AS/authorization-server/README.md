@@ -13,7 +13,7 @@ This documentation describes how to install and configure the Authorization Serv
 Please follow specialized documentation to configure a production strength system.
 
 ## Description
-The main SAML authenticaiton functionality is implemented as an extension to the OAuth2 library. You find the extensions in the `lib` sub-folders.
+The main SAML authentication functionality is implemented as an extension to the OAuth2 library. You find the extensions in the `lib` sub-folders.
 
 The main functions of the authorization server is implemented in file `.../www/as.php` and the configuration can be achieved via the `.../config/config.php` file.
 
@@ -28,7 +28,7 @@ The installation of the AS is mainly achieved via the PHP composer tool.
 
 This documentation leverages Centos 7 to describe the installation of OS packages.
 
-### Preperation
+### Preparation
 The following installation is based on a CENTOS 7 image.
 
 ------------
@@ -135,13 +135,13 @@ yum -y install php php-opcache php-xml php-dom php-mcrypt php-mysql php-intl php
 ````
 
 ### Install PHP Composer
-To install the PHP coposer tool, please execute the following command in a terminal:
+To install the PHP composer tool, please execute the following command in a terminal:
 
 ````
 curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 ````
 
-This installs the PHP Composer in `/usr/local/bin` as executeable.
+This installs the PHP Composer in `/usr/local/bin` as executable.
 
 ### Install MySQL
 This implementation of the Authorization Server uses database schemes that are different from the ones used by the OAuth2 library. The main reason is the support for use claims originating from SAML authentication.
@@ -297,17 +297,17 @@ chown -R apache:apache pki
 ````
 
 #### Setup Config.php
-Configue the Authorization Server vi `.../config/config.php`
+Configure the Authorization Server vi `.../config/config.php`
 
-* configure the Discovry Service with `ds_url`
+* configure the Discovery Service with `ds_url`
 * set the `secret`to a meaningful salt
 
 ### SimpleSAMLphp
 In any case, it is recommended to follow the detailed documentation available on the [SimpleSAMLphp homepage](https://simplesamlphp.org/).
 
-The aim of the following documentation is **not** to replace the comprehensive documentation provided by SimpleSAMLphp. Instead, it is ment as a short add-on to be able to configure the library for supporting the AS in a required way.
+The aim of the following documentation is **not** to replace the comprehensive documentation provided by SimpleSAMLphp. Instead, it is meant as a short add-on to be able to configure the library for supporting the AS in a required way.
 
-This requires to configure SimpleSAMLphp to act as a SAML2 Service Provider to support the authentication for the AS. Please note that the AS leverages two logical instances of a SAML SP to support the strict differenciation into
+This requires configuring SimpleSAMLphp to act as a SAML2 Service Provider to support the authentication for the AS. Please note that the AS leverages two logical instances of a SAML SP to support the strict differentiation into
 
 * logical instance `oauth` that must be configured to **not** request attributes from IdPs
 * logical instance `openid` that must be configured to **request** attributes from IdPs 
@@ -316,7 +316,7 @@ This requires to configure SimpleSAMLphp to act as a SAML2 Service Provider to s
 #### Keys and Certificate
 The directory `.../cert` must be created and at least contain a private key and a valid (not self-signed) certificate to sign (and eventually encrypt) SAML communicaation. Please follow your companies policy to create a private key and to obtain a globally valid certificate.
 
-Pease put the private key and certificate into the `.../cert` directory and configure the associated entires in the `.../config/authsources.php` file.
+Please put the private key and certificate into the `.../cert` directory and configure the associated entries in the `.../config/authsources.php` file.
 
 ```php
 <?php
@@ -569,12 +569,12 @@ In order to be able to leverage the SAML authentication in an existing federatio
 
 When registering the SP instances with the Coordination Center, it is important to keep in mind that the configuration of the wo instances differ regarding the request of user attributes: The `oauth` instance must be configured to not force the IdP to release user attributes and the `openid` instance must be configured to request a unique user identifier plus attributes to fill the openid claims for the scopes `email` and `profile`.
 
-#### Fetching Federtion Metadata
+#### Fetching Federation Metadata
 Once the SPs are registered, the SPs must fetch the metadata of the IdPs that are trusted for login. SimpleSAMLphp supports two options: (i) manual management for the circle of trust and (ii) automatic trust.
 
-In case you like to setup the AS with automatic trust establishment, this can be achieved as documented in the SimpleSAMLphp wiki: <https://simplesamlphp.org/docs/stable/simplesamlphp-automated_metadata>
+In case you like to set up the AS with automatic trust establishment, this can be achieved as documented in the SimpleSAMLphp wiki: <https://simplesamlphp.org/docs/stable/simplesamlphp-automated_metadata>
 
-In case there are other (project specific) IdPs that are not registered with another coorination center, please load their metadata manually.
+In case there are other (project specific) IdPs that are not registered with another coordination center, please load their metadata manually.
 
 The following configuration file fetches the DFN and eduGAIN metadata automatically (`config/config-metarefresh.php`):
 
@@ -648,7 +648,7 @@ $config = array(
 );
 ```
 
-The metadata is fetched via he user of the Web Server (in the case of httpd this is `apache`). It is required to create the sorage directories and make use `apache` owner.
+The metadata is fetched via the user of the Web Server (in the case of `httpd` this is `apache`). It is required to create the storage directories and make use `apache` owner.
 
 ````
 cd ...
@@ -667,7 +667,7 @@ cd metadata
 su -s /bin/bash apache -c "php metarefresh.php"
 ````
 
-The metadata will expire after the configured time (default 96 hours). To keep the metadata fresh, please configure crontab to fetch the metadata each day for example. It is important the the user apache runs the script! Use `crontab -e` to add the following line:
+The metadata will expire after the configured time (default 96 hours). To keep the metadata fresh, please configure crontab to fetch the metadata each day for example. It is important that the user apache runs the script! Use `crontab -e` to add the following line:
 
 ````
 01 1 * * * su apache -s /bin/bash -c "cd /opt/authorization-server/vendor/simplesamlphp/simplesamlphp/metadata/ && php metarefresh.php"
@@ -711,7 +711,7 @@ The deployed Authorization Server can be tested via a set of test applications a
 
 All information regarding testing can be in the `test/AS` [directory](test/AS/README.md)
 
-#### Preperation (sort)
+#### Preparation (sort)
 The Test Web Server displays the homepage for testing which is generated from `TEST.md`. So first, you need to run `composer install` to install the dependencies. Change into the `.../test/AS` directory.
 
 ````
