@@ -128,7 +128,7 @@ Please configure the Apache Web Server with a proper certificate to operate on H
 ##### Note: 
 
 If ``httpd`` is unable to start, run the following command if you copied the certificate and key file from `/home/user` 
-to either `/etc/ssl/certs/` or `/etc/pki/tls/certs/` (they are both are a symbiotic link):
+to either `/etc/ssl/certs/` or `/etc/pki/tls/certs/` (they are both a symbiotic link):
 
 ```bash
 restorecon -RvF /etc/ssl/certs/
@@ -224,7 +224,8 @@ yum -y install unzip
 Execute the following command in directory `authorization-server`:
 
 ````
-composer install
+cd /opt/authorization-server
+/usr/local/bin/composer install
 ````
 
 This will download the required PHP packages to run the Authorization Server including the OAuth2 and SimpleSAMLphp libraries into the `vendor` directory. The SimpleSAMLphp package is required for the SAML based authentication.
@@ -240,11 +241,17 @@ Different software packages must cooperate to make the AS work:
 ### MySQL Database
 Create the Authorization Server database (`samlas` for this documentation).
 
-````
+````bash
 mysql
+````
+OR as ``root``
+````
+mysql -u root -p
+````
+then
+````bash
 mysql> CREATE DATABASE samlas;
 ```` 
-
 The database tables will be created automatically if not exist. in order to change this default behaviour, please change the following entry in the `config/config.php` file:
 
 ````
@@ -252,7 +259,11 @@ The database tables will be created automatically if not exist. in order to chan
 ````
 
 To start the Event Scheduler (MySQL on CENTOS) add the entry `event_scheduler = on` under the `[mysqld]` section in `/etc/my.cnf` and restart mysqld.
+````bash
+service mysqld restart
+````
 
+Then
 ````
 mysql> CREATE USER 'php'@'localhost' IDENTIFIED BY 'password';
 mysql> GRANT ALL PRIVILEGES ON samlas.* TO 'php'@'localhost';
@@ -264,6 +275,9 @@ To change this default behaviour, change the default value in the `config/config
 
 ````
 'create_test_clients' => false,
+````
+````bash
+service mysqld restart
 ````
 
 ### Postgresql Database
