@@ -120,7 +120,21 @@ The AS operates on HTTPS which requires to also install the `mod_ssl` module.
 yum -y install httpd mod_ssl
 ````
 
-Please configure the Apache Web Server with a proper certificate to operate on HTTPS. (The details how to do that is outside the scope of this documentation).
+Please configure the Apache Web Server with a proper certificate to operate on HTTPS. 
+(The details how to do that is outside the scope of this documentation).
+
+---------------------
+
+##### Note: 
+
+If ``httpd`` is unable to start, run the following command if you copied the certificate and key file from `/home/user` 
+to either `/etc/ssl/certs/` or `/etc/pki/tls/certs/` (they are both are a symbiotic link):
+
+```bash
+restorecon -RvF /etc/ssl/certs/
+```
+
+---------------------
 
 You find an example configuration for deploying the Authorization in the configuration section below.
 
