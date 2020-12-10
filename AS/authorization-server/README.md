@@ -128,7 +128,7 @@ Please configure the Apache Web Server with a proper certificate to operate on H
 ##### Note: 
 
 If ``httpd`` is unable to start, run the following command if you copied the certificate and key file from `/home/user` 
-to either `/etc/ssl/certs/` or `/etc/pki/tls/certs/` (they are both a symbiotic link):
+to either `/etc/ssl/certs/` or `/etc/pki/tls/certs/` (they are both a symbolic link):
 
 ```bash
 restorecon -RvF /etc/ssl/certs/
