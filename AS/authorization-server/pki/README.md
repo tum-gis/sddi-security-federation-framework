@@ -28,13 +28,13 @@ There are many different tools available to help creating the JWK representation
 ### Download and Configure Chilkat PHP library for JWK
 For this documentation, we use the Chilkat PHP library to create the JWK representation of the public key as described [here](https://www.example-code.com/phpExt/publickey_rsa_get_jwk_format.asp).
 
-For CENTOS x86_64 you can download the library for PHP 7.2 from [https://chilkatdownload.com/9.5.0.80/chilkat-9.5.0-php-7.2-x86_64-linux.tar.gz](https://chilkatdownload.com/9.5.0.80/chilkat-9.5.0-php-7.2-x86_64-linux.tar.gz)
+For CENTOS x86_64 you can download the library for PHP 7.4:
 
 ````
 cd /opt
-wget https://chilkatdownload.com/9.5.0.80/chilkat-9.5.0-php-7.2-x86_64-linux.tar.gz
-tar xzf chilkat-9.5.0-php-7.2-x86_64-linux.tar.gz
-cd chilkat-9.5.0-php-7.2-x86_64-linux
+wget https://chilkatdownload.com/9.5.0.84/chilkat-9.5.0.84.2-php-7.4-x86_64-linux.tar.gz
+tar xzf chilkat-9.5.0.84.2-php-7.4-x86_64-linux.tar.gz
+cd chilkat-9.5.0.84.2-php-7.4-x86_64-linux
 cp chilkat_9_5_0.so /usr/lib64/php/modules
 ````
 
