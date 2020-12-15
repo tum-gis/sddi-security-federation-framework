@@ -13,9 +13,13 @@ This documentation describes how to install and configure the Authorization Serv
 Please follow specialized documentation to configure a production strength system.
 
 ## Description
-The main SAML authentication functionality is implemented as an extension to the OAuth2 library. You find the extensions in the `lib` sub-folders.
+The main SAML authentication functionality is implemented as an extension to the OAuth2 library. 
+You find the extensions in the `lib` sub-folders.
 
-The main functions of the authorization server is implemented in file `.../www/as.php` and the configuration can be achieved via the `.../config/config.php` file.
+The main functions of the authorization server is implemented in file `.../www/as.php` 
+and the configuration can be achieved via the `.../config/config.php` file.
+The directory ``...`` refers to the working directory of the authorization server, e.g. ``/opt/authorization-server``.
+This shall be explained further in more details.
 
 ## Dependencies
 This implementation requires PHP 7.2 and different extensions and the following libraries:
