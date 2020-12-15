@@ -329,6 +329,7 @@ Configure the Authorization Server vi `.../config/config.php`
 
 * configure the Discovery Service with `ds_url`
 * set the `secret`to a meaningful salt
++ update password of `PDO`
 
 ### SimpleSAMLphp
 In any case, it is recommended to follow the detailed documentation available on the [SimpleSAMLphp homepage](https://simplesamlphp.org/).
@@ -342,9 +343,10 @@ This requires configuring SimpleSAMLphp to act as a SAML2 Service Provider to su
 
 
 #### Keys and Certificate
-The directory `.../cert` must be created and at least contain a private key and a valid (not self-signed) certificate to sign (and eventually encrypt) SAML communicaation. Please follow your companies policy to create a private key and to obtain a globally valid certificate.
+The directory `.../vendor/simplesamlphp/simplesamlphp/cert` must be created and at least contain a private key and a valid (not self-signed) certificate to sign (and eventually encrypt) SAML communication.
+Please follow your company's policy to create a private key and to obtain a globally valid certificate.
 
-Please put the private key and certificate into the `.../cert` directory and configure the associated entries in the `.../config/authsources.php` file.
+Please put the private key and certificate into the `.../vendor/simplesamlphp/simplesamlphp/cert` directory and configure the associated entries in the `.../vendor/simplesamlphp/simplesamlphp/config/authsources.php` file.
 
 ```php
 <?php
@@ -374,7 +376,7 @@ $config = array(
 
         'entityID' => 'https://' . $_SERVER['SERVER_NAME'] . '/oauth',
 
-        'discoURL' => '<this is the same URL as you provided in the AS config/config.php under ds_url>',
+        'discoURL' => '<this is the same URL as you provided in the AS .../config/config.php under ds_url>',
 
         'privatekey' => '<filename for the private key>.pem',
 
@@ -390,7 +392,7 @@ $config = array(
 
         'entityID' => 'https://' . $_SERVER['SERVER_NAME'] . '/oidc-profile',
 
-        'discoURL' => '<this is the same URL as you provided in the AS config/config.php under ds_url>',
+        'discoURL' => '<this is the same URL as you provided in the AS .../config/config.php under ds_url>',
 
         'privatekey' => '<filename for the private key>.pem',
 
@@ -401,7 +403,16 @@ $config = array(
 );
 ```
 
-Example `authsources.php` file.
+Then change
++ ``technicalcontact_name`` 
++ ``technicalcontact_email``
++ ``auth.adminpassword``
++ ``session.cookie.name``
++ ``session.phpsession.cookiename``
++ ``session.authtoken.cookiename``
++ ``store.sql.password``
+
+of the following file `.../vendor/simplesamlphp/simplesamlphp/config/config.php`.
 
 ```php
 <?php
@@ -428,8 +439,8 @@ $config = array(
     'datadir' => 'data/',
     'tempdir' => '/tmp/simplesaml',
 
-    'technicalcontact_name' => 'Andreas Matheus',
-    'technicalcontact_email' => 'support@secure-dimensions.de',
+    'technicalcontact_name' => '<Your Name>',
+    'technicalcontact_email' => '<Your Email>',
 
     'timezone' => 'Europe/Berlin',
 
@@ -588,9 +599,6 @@ $config = array(
 
 );
 ```
-
-Example config.php file
-
 
 #### Metadata Management
 In order to be able to leverage the SAML authentication in an existing federation, the metadata of the two SPs must be registered with a coordination center that is responsible. For example in case the AS is operated in Germany and  you want to have the AS allow federted login from DFN AAI, then you must register the SPs metadata with them. Please follow the DFN AAI instructions [here](https://doku.tid.dfn.de/:de:start)
