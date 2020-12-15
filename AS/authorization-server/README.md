@@ -623,6 +623,8 @@ this can be achieved as documented in
 (see below for configurations and commands tailored for this use case).
 In case there are other (project specific) IdPs that are not registered with another coordination center, please load their metadata manually.
 
+Enable module ``cron`` and ``metarefresh``:
+
 ````bash
 cd .../vendor/simplesamlphp/simplesamlphp
 touch modules/cron/enable
@@ -707,7 +709,7 @@ The metadata is fetched via the user of the Web Server (in the case of `httpd` t
 It is required to create the storage directories and make use `apache` owner.
 
 ````
-cd ...
+cd .../vendor/simplesamlphp/simplesamlphp
 mkdir -p metadata/metafresh-eduGain
 mkdir -p metadata/metafresh-dfn
 chown apache:apache metadata/metafresh*
@@ -717,12 +719,99 @@ The automated fetching of metadata requires the certificate of the coordination 
 Please make sure you download the `dfn-aai.g2.pem` file and store it into the 
 `.../vendor/simplesamlphp/simplesamlphp/cert` directory.
 
+Create ``.../vendor/simplesamlphp/simplesamlphp/metadata/metarefresh.php``:
+````php
+<?php
+
+ini_set('memory_limit','512M');
+
+require '../lib/_autoload.php';
+
+$config = \SimpleSAML\Configuration::getInstance();
+$mconfig = \SimpleSAML\Configuration::getOptionalConfig('config-metarefresh.php');
+
+\SimpleSAML\Logger::setCaptureLog(true);
+
+$sets = $mconfig->getConfigList('sets', []);
+
+foreach ($sets as $setkey => $set) {
+    \SimpleSAML\Logger::info('[metarefresh]: Executing set ['.$setkey.']');
+
+    try {
+        $expireAfter = $set->getInteger('expireAfter', null);
+        if ($expireAfter !== null) {
+            $expire = time() + $expireAfter;
+        } else {
+            $expire = null;
+        }
+        $metaloader = new \SimpleSAML\Module\metarefresh\MetaLoader($expire);
+
+        # Get global black/whitelists
+        $blacklist = $mconfig->getArray('blacklist', []);
+        $whitelist = $mconfig->getArray('whitelist', []);
+
+        // get global type filters
+        $available_types = [
+            'saml20-idp-remote',
+            'saml20-sp-remote',
+            'shib13-idp-remote',
+            'shib13-sp-remote',
+            'attributeauthority-remote'
+        ];
+        $set_types = $set->getArrayize('types', $available_types);
+
+        foreach ($set->getArray('sources') as $source) {
+            // filter metadata by type of entity
+            if (isset($source['types'])) {
+                $metaloader->setTypes($source['types']);
+            } else {
+                $metaloader->setTypes($set_types);
+            }
+
+            # Merge global and src specific blacklists
+            if (isset($source['blacklist'])) {
+                $source['blacklist'] = array_unique(array_merge($source['blacklist'], $blacklist));
+            } else {
+                $source['blacklist'] = $blacklist;
+            }
+
+            # Merge global and src specific whitelists
+            if (isset($source['whitelist'])) {
+                $source['whitelist'] = array_unique(array_merge($source['whitelist'], $whitelist));
+            } else {
+                $source['whitelist'] = $whitelist;
+            }
+
+            \SimpleSAML\Logger::debug('[metarefresh]: In set ['.$setkey.'] loading source ['.$source['src'].']');
+            $metaloader->loadSource($source);
+        }
+
+        $outputDir = $set->getString('outputDir');
+        $outputDir = $config->resolvePath($outputDir);
+
+        $outputFormat = $set->getValueValidate('outputFormat', ['flatfile', 'serialize'], 'flatfile');
+        switch ($outputFormat) {
+            case 'flatfile':
+                $metaloader->writeMetadataFiles($outputDir);
+                break;
+            case 'serialize':
+                $metaloader->writeMetadataSerialize($outputDir);
+                break;
+        }
+    } catch (\Exception $e) {
+        $e = \SimpleSAML\Error\Exception::fromException($e);
+        $e->logWarning();
+    }
+}
+
+$logentries = \SimpleSAML\Logger::getCapturedLog();
+````
+
 For initializing the metadata you can manually fetch the metadata from the configured sources using user `apache`:
 
 ````
-cd ...
-cd metadata
-su -s /bin/bash apache -c "php ../vendor/simplesamlphp/simplesamlphp/config/config-metarefresh.php"
+cd .../vendor/simplesamlphp/simplesamlphp/metadata
+su -s /bin/bash apache -c "php metarefresh.php"
 ````
 
 The metadata will expire after the configured time (default 96 hours). To keep the metadata fresh, please configure crontab to fetch the metadata each day for example. It is important that the user apache runs the script! Use `crontab -e` to add the following line:
