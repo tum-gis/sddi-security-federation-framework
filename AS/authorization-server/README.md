@@ -601,18 +601,37 @@ $config = array(
 ```
 
 #### Metadata Management
-In order to be able to leverage the SAML authentication in an existing federation, the metadata of the two SPs must be registered with a coordination center that is responsible. For example in case the AS is operated in Germany and  you want to have the AS allow federted login from DFN AAI, then you must register the SPs metadata with them. Please follow the DFN AAI instructions [here](https://doku.tid.dfn.de/:de:start)
+In order to be able to leverage the SAML authentication in an existing federation, 
+the metadata of the two SPs must be registered with a coordination center that is responsible. 
+For example in case the AS is operated in Germany and you want to have the AS allow a federated login from DFN AAI, 
+then you must register the SPs metadata with them. 
+Please follow the DFN AAI instructions [here](https://doku.tid.dfn.de/:de:start).
 
-When registering the SP instances with the Coordination Center, it is important to keep in mind that the configuration of the wo instances differ regarding the request of user attributes: The `oauth` instance must be configured to not force the IdP to release user attributes and the `openid` instance must be configured to request a unique user identifier plus attributes to fill the openid claims for the scopes `email` and `profile`.
+When registering the SP instances with the Coordination Center, it is important to keep in mind 
+that the configuration of the two instances differ regarding the request of user attributes: 
+The `oauth` instance must be configured to not force the IdP to release user attributes 
+and the `openid` instance must be configured to request a unique user identifier plus attributes 
+to fill the openid claims for the scopes `email` and `profile`.
 
 #### Fetching Federation Metadata
-Once the SPs are registered, the SPs must fetch the metadata of the IdPs that are trusted for login. SimpleSAMLphp supports two options: (i) manual management for the circle of trust and (ii) automatic trust.
+Once the SPs are registered, the SPs must fetch the metadata of the IdPs that are trusted for login. 
+SimpleSAMLphp supports two options: (i) manual management for the circle of trust and (ii) automatic trust.
 
-In case you like to set up the AS with automatic trust establishment, this can be achieved as documented in the SimpleSAMLphp wiki: <https://simplesamlphp.org/docs/stable/simplesamlphp-automated_metadata>
-
+In case you like to set up the AS with automatic trust establishment, 
+this can be achieved as documented in 
+[the SimpleSAMLphp wiki](https://simplesamlphp.org/docs/stable/metarefresh:simplesamlphp-automated_metadata) 
+(see below for configurations and commands tailored for this use case).
 In case there are other (project specific) IdPs that are not registered with another coordination center, please load their metadata manually.
 
-The following configuration file fetches the DFN and eduGAIN metadata automatically (`config/config-metarefresh.php`):
+````bash
+cd .../vendor/simplesamlphp/simplesamlphp
+touch modules/cron/enable
+cp modules/cron/config-templates/*.php config/
+touch modules/metarefresh/enable
+````
+
+The following configuration file fetches the DFN and eduGAIN metadata automatically 
+(`.../vendor/simplesamlphp/simplesamlphp/config/config-metarefresh.php`):
 
 ```php
 <?php
@@ -684,7 +703,8 @@ $config = array(
 );
 ```
 
-The metadata is fetched via the user of the Web Server (in the case of `httpd` this is `apache`). It is required to create the storage directories and make use `apache` owner.
+The metadata is fetched via the user of the Web Server (in the case of `httpd` this is `apache`). 
+It is required to create the storage directories and make use `apache` owner.
 
 ````
 cd ...
@@ -693,14 +713,16 @@ mkdir -p metadata/metafresh-dfn
 chown apache:apache metadata/metafresh*
 ````
 
-The automated fetching of metadata requires the certificate of the coordination center - which is DFN in the example above. Pleae make sure you download the `dfn-aai.g2.pem` file and store it into the `cert` directory.
+The automated fetching of metadata requires the certificate of the coordination center - which is DFN in the example above. 
+Please make sure you download the `dfn-aai.g2.pem` file and store it into the 
+`.../vendor/simplesamlphp/simplesamlphp/cert` directory.
 
 For initializing the metadata you can manually fetch the metadata from the configured sources using user `apache`:
 
 ````
 cd ...
 cd metadata
-su -s /bin/bash apache -c "php metarefresh.php"
+su -s /bin/bash apache -c "php ../vendor/simplesamlphp/simplesamlphp/config/config-metarefresh.php"
 ````
 
 The metadata will expire after the configured time (default 96 hours). To keep the metadata fresh, please configure crontab to fetch the metadata each day for example. It is important that the user apache runs the script! Use `crontab -e` to add the following line:
