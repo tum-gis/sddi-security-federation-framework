@@ -883,6 +883,8 @@ export OPENID_CONFIGURATION=https://<your domain name for the Authorization Serv
 php -S 127.0.0.1:4711 -t html
 ````
 
+You may need to allow connection to the port number ``4711``.
+
 #### Use the Test Web Server
 Please use your favorite Web Browser and navigate to URL <http://127.0.0.1:4711>.
 

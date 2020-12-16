@@ -5,6 +5,12 @@ To setup the SAML2 Discovery Service (or WAYF) is basically split into three ste
 * Apply the basic (vanilla) configuration as described in the `README.md` file provided with the SWITCHwayf.
 * Apply the SDDI specific configuration
 
+## Base installations
+
+Install Apache Web Server, Firewall, etc.
+Please refer to the beginning of [AS](../AS/authorization-server/README.md).
+Then install/update the certificates.
+
 ## Download from SWITCH gitlab
 The SWITCHwayf package is Open Source and can be downloaded from the SWITCH Gitlab:
 [SWITCHwayf-v1.21](https://gitlab.switch.ch/aai/SWITCHwayf/-/archive/v1.21/SWITCHwayf-v1.21.tar.gz)
