@@ -862,7 +862,7 @@ Alias /simplesaml /opt/authorization-server/vendor/simplesamlphp/simplesamlphp/w
 ### Testing
 The deployed Authorization Server can be tested via a set of test applications and a Test Web Server that simulates the different applications. 
 
-All information regarding testing can be in the `test/AS` [directory](test/AS/README.md)
+All information regarding testing can be in the directory [`test/AS`](test/AS/TEST.md).
 
 #### Preparation (sort)
 The Test Web Server displays the homepage for testing which is generated from `TEST.md`. So first, you need to run `composer install` to install the dependencies. Change into the `.../test/AS` directory.

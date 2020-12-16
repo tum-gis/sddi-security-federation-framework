@@ -12,7 +12,7 @@ Assuming that such an IdP exists, the following sections test the functionality 
 
 The objective of the tests is to verify an error free implementation of the SAML2 related classes that implement the brokering of SAML user attributes into OpenID claims. The basic tests of the OAuth2 library are considered as passed.
 
-## Preperations
+## Preparations
 Before the tests can begin, the Authorization Server must 'know' test applications that are fit for purpose to execute the different tests. For testing the different flows (authorization code flow, implicit, client credentials) and the GDPR compliance you first need to register applications as the cross product of flows and scopes.
 
 The Authorization Server supports the following scopes:
