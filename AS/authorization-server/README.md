@@ -825,31 +825,33 @@ The metadata will expire after the configured time (default 96 hours). To keep t
 ````
 
 ### Apache Web Server
-The Apache Web Server must be configured to rewrite the API path to be executed by `as.php`. This can simply be achieved by the following example configuration
+The Apache Web Server must be configured to rewrite the API path to be executed by `as.php`. 
+This can simply be achieved by adding the following example configuration in ``as.conf``.
+This file can be stored in ``/etc/httpd/conf.d`` or ``/etc/apache2/conf/sites-enabled``.
 
 ````
-    RewriteCond "%{REQUEST_URI}"  "^/oauth"  [OR]
-    RewriteCond "%{REQUEST_URI}"  "^/openid"  [OR]
-    RewriteCond "%{REQUEST_URI}"  "^/saml" [OR]
-    RewriteCond "%{REQUEST_URI}"  "^/listapps" [OR]
-    RewriteCond "%{REQUEST_URI}"  "^/registerapps" [OR]
-    RewriteCond "%{REQUEST_URI}"  "^/authorizedapps" [OR]
-    RewriteCond "%{REQUEST_URI}"  "^/logoutapps" [OR]
-    RewriteCond "%{REQUEST_URI}"  "^/listapp" [OR]
-    RewriteCond "%{REQUEST_URI}"  "^/listapps" [OR]
-    RewriteCond "%{REQUEST_URI}"  "^/listoperators" [OR]
-    RewriteCond "%{REQUEST_URI}"  "^/.well-known" [OR]
-    RewriteCond "%{REQUEST_URI}"  "^/NoPrivacyStatement" [OR]
-    RewriteCond "%{REQUEST_URI}"  "^/PrivacyStatement" [OR]
-    RewriteCond "%{REQUEST_URI}"  "^/CookieStatement" [OR]
-    RewriteCond "%{REQUEST_URI}"  "^/TermsOfUse" [OR]
-    RewriteCond "%{REQUEST_URI}"  "^/IdPs" [OR]
-    RewriteCond "%{REQUEST_URI}"  "^/Operators" [OR]
-    RewriteCond "%{REQUEST_URI}"  "^/DiscoveryService"
-    RewriteRule (.*) /as.php/$1 [qsappend,L]
+RewriteCond "%{REQUEST_URI}"  "^/oauth"  [OR]
+RewriteCond "%{REQUEST_URI}"  "^/openid"  [OR]
+RewriteCond "%{REQUEST_URI}"  "^/saml" [OR]
+RewriteCond "%{REQUEST_URI}"  "^/listapps" [OR]
+RewriteCond "%{REQUEST_URI}"  "^/registerapps" [OR]
+RewriteCond "%{REQUEST_URI}"  "^/authorizedapps" [OR]
+RewriteCond "%{REQUEST_URI}"  "^/logoutapps" [OR]
+RewriteCond "%{REQUEST_URI}"  "^/listapp" [OR]
+RewriteCond "%{REQUEST_URI}"  "^/listapps" [OR]
+RewriteCond "%{REQUEST_URI}"  "^/listoperators" [OR]
+RewriteCond "%{REQUEST_URI}"  "^/.well-known" [OR]
+RewriteCond "%{REQUEST_URI}"  "^/NoPrivacyStatement" [OR]
+RewriteCond "%{REQUEST_URI}"  "^/PrivacyStatement" [OR]
+RewriteCond "%{REQUEST_URI}"  "^/CookieStatement" [OR]
+RewriteCond "%{REQUEST_URI}"  "^/TermsOfUse" [OR]
+RewriteCond "%{REQUEST_URI}"  "^/IdPs" [OR]
+RewriteCond "%{REQUEST_URI}"  "^/Operators" [OR]
+RewriteCond "%{REQUEST_URI}"  "^/DiscoveryService"
+RewriteRule (.*) /as.php/$1 [qsappend,L]
 ````
 
-To enable the SimpleSAMLphp library, please add he following to the `as.conf`:
+To enable the SimpleSAMLphp library, please add the following lines to the `as.conf`:
 
 ````
 SetEnv SIMPLESAMLPHP_CONFIG_DIR /opt/authorization-server/vendor/simplesamlphp/simplesamlphp/config
