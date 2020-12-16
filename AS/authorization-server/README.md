@@ -865,17 +865,20 @@ The deployed Authorization Server can be tested via a set of test applications a
 All information regarding testing can be in the directory [`test/AS`](test/AS/TEST.md).
 
 #### Preparation (sort)
-The Test Web Server displays the homepage for testing which is generated from `TEST.md`. So first, you need to run `composer install` to install the dependencies. Change into the `.../test/AS` directory.
+The Test Web Server displays the homepage for testing which is generated from `TEST.md`. 
+So first, you need to run `composer install` to install the dependencies. 
 
-````
-composer install
+````bash
+cd .../test/AS
+/usr/local/bin/composer install
 ````
 
-Note: when asked to re-use the existing composer.json file in `/opt/authorization-server` answer *no*.
+Note: When asked to re-use the existing ``composer.json`` file in `/opt/authorization-server` answer *no*.
 
 Next, you need to set the domain name of your deployed AS and start the Web Server.
 
-````
+````bash
+cd .../test/AS
 export OPENID_CONFIGURATION=https://<your domain name for the Authorization Server>/.well-known/openid-configuration
 php -S 127.0.0.1:4711 -t html
 ````
