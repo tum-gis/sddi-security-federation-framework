@@ -7,7 +7,7 @@ To setup the SAML2 Discovery Service (or WAYF) is basically split into three ste
 
 ## Base installations
 
-Install Apache Web Server, Firewall, etc.
+Install Apache Web Server, Firewall, PHP, etc.
 Please refer to the beginning of [AS](../AS/authorization-server/README.md).
 Then install/update the certificates.
 
@@ -20,6 +20,7 @@ The SWITCHwayf package is Open Source and can be downloaded from the SWITCH Gitl
 The SWITCHwayf package can also be downloaded by cloning this Github repository:
 ````
 yum -y install git
+cd /opt
 git clone https://github.com/tum-gis/sddi-security-federation-framework
 cp -r sddi-security-federation-framework/DS/ discovery-service/
 ````
@@ -29,8 +30,14 @@ cp -r sddi-security-federation-framework/DS/ discovery-service/
 ## Installation and Basic Configuration
 For this installation we will use the following directory structure:
 
+* `...` the working directory ``/opt/discovery-service``
 * `.` directory will contain the scripts required to configure the IdP pull-down list
 * `html` directory will contain the runtime of the WAYF
+
+Install ``curl``:
+````bash
+yum install curl
+````
 
 Extract `SWITCHwayf-v1.21.tar.gz` into `/opt/discovery-service/html` directory as it contains the runtime files.
 
@@ -48,8 +55,10 @@ The adoption of the basic configuration of the SWITCHwayf can be achieved by usi
 
 Please make sure that the Cookie names used in the `config.php` file match the names used in the `CookieStatement.html`.
 
-### Copy the SDDI specific files
-Copying the following files into the directory `/opt/discovery-service/html`:
+### Keep the SDDI specific files
+Move all files and directories from ``/opt/discovery-service/html/SWITCHwayf-v1.21`` to ``/opt/discovery-service/html``.
+
+Make sure the following files in the directory `/opt/discovery-service/html` are NOT overridden:
 
 * CookieStatement.html
 * PrivacyStatement.html
@@ -66,25 +75,46 @@ Copying the following files into the directory `/opt/discovery-service/html`:
 * images/SD_180_120.png
 * (config.php)
 
+This means do NOT copy the following files (these are default images):
+````bash
+/opt/discovery-service/html/SWITCHwayf-v1.21/images/small-federation-logo.png
+/opt/discovery-service/html/SWITCHwayf-v1.21/images/federation-logo.png
+/opt/discovery-service/html/SWITCHwayf-v1.21/images/organization-logo.png
+````
+since they would otherwise replace the customized logos etc. in ``/opt/discovery-service/html`` with the default ones.
+
+Make sure the binary file ``WAYF`` is now in the directory ``/opt/discovery-service/html``.
 
 ## Preparing the WAYF for the first use
 *Note: Make sure you have installed `curl`.*
 
 In order to compile the list of IdPs, you need to download the following SAML2 metadata files:
 
-* Google IdP: You can download the SAML2 metadata URL via the URL, specific for your installation. The URL is displayed in the SimpleSAMLphp GUI: <host>/simplesaml/module.php/core/frontpage_federation.php
-* eduGain: You can download this file from the DFN repository: `curl http://www.aai.dfn.de/fileadmin/metadata/dfn-aai-edugain+idp-metadata.xml`
+* Google IdP: You can download the SAML2 metadata URL via the URL specific for your installation. 
+  The URL is displayed in the SimpleSAMLphp GUI: 
+  ````bash
+  <host>/simplesaml/module.php/core/frontpage_federation.php
+  ````
+* eduGain: You can download this file from the DFN repository: 
+  ````bash
+  cd /opt/discovery-service
+  curl http://www.aai.dfn.de/fileadmin/metadata/dfn-aai-edugain+idp-metadata.xml -o dfn-aai-edugain+idp-metadata.xml
+  ````
 
-Before the WAYF can be used for the first time **and** each time the list of IdPs changes, the WAYF's list of IdPs must be synchronized. This is a manual process and can done via the following steps:
+Before the WAYF can be used for the first time **and** each time the list of IdPs changes, 
+the WAYF's list of IdPs must be synchronized. 
+This is a manual process and can be done via the following steps:
 
-````
-cd /opt/discovery-service
-./compose_metadata.sh > metadata.xml
-php createIDProviderConfig.php metadata.xml > html/IDProvider.conf.php
-cd html
-php readMetadata.php
-````
-*Note: Please make sure that you have adopted the `compose_metadata.sh` file to relect the file names for the SAML2 metadata (lines 14 and 15).*
+* Modify `compose_metadata.sh` file to reflect the file names for the SAML2 metadata (lines 14 and 15).
+
+* Execute the following commands:
+  ````
+  cd /opt/discovery-service
+  ./compose_metadata.sh > metadata.xml
+  php createIDProviderConfig.php metadata.xml > html/IDProvider.conf.php
+  cd html
+  php readMetadata.php
+  ````
 
 ## Test
 Once the configuration is complete, you can open the WAYF in a Web Browser and check if all expected IdP organizations are listed. The URL to use is `https://<your domain name for the DS>/WAYF`. 
