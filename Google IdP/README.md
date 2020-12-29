@@ -110,7 +110,7 @@ hence a self-signed certificate would suffice here:
     
 ### Set up SimpleSAMLphp Identity Provider
 
-1.  Go to [Google Console](https://console.developers.google.com/), 
+1.  Go to the [Google API Console](https://console.developers.google.com/), 
     create an OAuth application. Then create credentials for an OAuth web application.
     This will give a Google client ID and a secret.
 
@@ -118,8 +118,15 @@ hence a self-signed certificate would suffice here:
     (more information on the configuration parameters 
     [here](https://github.com/cirrusidentity/simplesamlphp-module-authoauth2#generic-google)):
     ````bash
-    'genericGoogleTest' => [
+     'google' => [
         'authoauth2:OAuth2',
+        'template' => 'GoogleOIDC',
+        // *** Certs ***
+        'sign.logout' => true,
+        'validate.logout' => true,
+        'redirect.sign' => true,
+        'privatekey' => '/etc/pki/tls/certs/google-idp_key.pem',
+        'certificate' => '/etc/pki/tls/certs/google-idp_cert.pem',
         // *** Google Endpoints ***
         'urlAuthorize' => 'https://accounts.google.com/o/oauth2/auth',
         'urlAccessToken' => 'https://accounts.google.com/o/oauth2/token',
@@ -127,14 +134,17 @@ hence a self-signed certificate would suffice here:
         // *** My application ***
         'clientId' => 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com',
         'clientSecret' => 'YOUR_GOOGLE_SECRET',
-        'scopes' =>  array(
+        'scopes' =>  [
             'openid',
             'email',
             'profile'
-        ),
+        ],
         'scopeSeparator' => ' ',
     ],
     ````
+    
+1.  Comment ``default-sp`` out in the file 
+    ``/var/google-idp/vendor/simplesamlphp/simplesamlphp/config/authsources.php``.
     
 1.  Configure the file ``/var/google-idp/vendor/simplesamlphp/simplesamlphp/metadata/saml20-sp-remote.php``
     to trust SSDSOS1, SSDSOS2 and SSDAS
