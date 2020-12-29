@@ -15,4 +15,4 @@ The test cases for ensuring the correct functioning of the Authorization Server 
 
 Maintainer: Chair of Geoinformatics, Department of Aerospace and Geodesy, Technical University of Munich.
 
-In collaboration with: Secure Dimensions GmbH
+In collaboration with: Secure Dimensions GmbH.
