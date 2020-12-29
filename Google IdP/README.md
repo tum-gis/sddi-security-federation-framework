@@ -1,4 +1,4 @@
-# How to install and setup SimpleSAMLphp server for Google IdP
+# Install and set up SimpleSAMLphp server for Google IdP
 
 ***All instructions and commands given in this documentation should be executed in CentOS 7.***
 
@@ -115,10 +115,12 @@ hence a self-signed certificate would suffice here:
     This will give a Google client ID and a secret.
 
 1.  Configure the file ``/var/google-idp/vendor/simplesamlphp/simplesamlphp/config/authsources.php`` 
-    (more information on the configuration parameters 
+    (for more information on the configuration parameters, please refer to 
+    [the official documentation](https://simplesamlphp.org/docs/stable/simplesamlphp-sp) and
     [here](https://github.com/cirrusidentity/simplesamlphp-module-authoauth2#generic-google)):
-    ````bash
+    ````php
      'google' => [
+        'saml:SP',
         'authoauth2:OAuth2',
         'template' => 'GoogleOIDC',
         // *** Certs ***
@@ -146,6 +148,15 @@ hence a self-signed certificate would suffice here:
 1.  Comment ``default-sp`` out in the file 
     ``/var/google-idp/vendor/simplesamlphp/simplesamlphp/config/authsources.php``.
     
+1.  Edit the following lines in the file 
+    ``/var/google-idp/vendor/simplesamlphp/simplesamlphp/metadata/saml20-idp-hosted.php``
+    ````php
+    'privatekey' => '/etc/pki/tls/certs/google-idp_key.pem',
+    'certificate' => '/etc/pki/tls/certs/google-idp_cert.pem',
+
+    'auth' => 'google',
+    ````
+
 1.  Configure the file ``/var/google-idp/vendor/simplesamlphp/simplesamlphp/metadata/saml20-sp-remote.php``
     to trust SSDSOS1, SSDSOS2 and SSDAS
     ````php
