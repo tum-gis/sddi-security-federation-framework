@@ -93,7 +93,7 @@ In order to compile the list of IdPs, you need to download the following SAML2 m
 * Google IdP: You can download the SAML2 metadata URL via the URL specific for your installation. 
   The URL is displayed in the SimpleSAMLphp GUI: 
   ````bash
-  <host>/simplesaml/module.php/core/frontpage_federation.php
+  https://google-idp.gis.bgu.tum.de/simplesaml/module.php/core/frontpage_federation.php
   ````
 * eduGain: You can download this file from the DFN repository: 
   ````bash
