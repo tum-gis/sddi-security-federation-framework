@@ -6,34 +6,7 @@
 
 1.  First install Apache, Firewall, PHP, etc. as described in [AS](../AS/authorization-server/README.md).
 
-1.  *(Alternatively to Apache)* NGINX
-
-    *   Install:
-        ````bash
-        yum install epel-release && yum install nginx
-        ````
-
-    *   See NGINX version:
-        ````bash
-        nginx -v
-        ````
-    
-    *   Test NGINX configurations:
-        ````bash
-        nginx -t
-        ````
-    
-    *   The default locations for NGINX config file:
-        ````bash
-        /etc/nginx/nginx.conf
-        ````
-    
-    *   Start NGINX:
-        ````bash
-        systemctl start nginx
-        ````
-
-3.  Install wget, curl, etc.
+1.  Install wget, curl, etc.
     ````bash
     yum install wget
     yum install curl
@@ -72,80 +45,54 @@ hence a self-signed certificate would suffice here:
 
 ### Setup SimpleSAMLphp
 
-The following instructions are taken from the 
-[official documentation](https://simplesamlphp.org/docs/stable/simplesamlphp-install).
-
-1.  Download and install SimpleSAMLphp
+1.  First use a [customized version](https://github.com/cirrusidentity/simplesamlphp-module-authoauth2) 
+    of SimpleSAMLphp to support Google OAuth
     ````bash
     cd /var
-    wget https://github.com/simplesamlphp/simplesamlphp/releases/download/v1.18.8/simplesamlphp-1.18.8.tar.gz
-    tar xzf simplesamlphp-1.18.8.tar.gz
-    rm -f simplesamlphp-1.18.8.tar.gz
-    mv simplesamlphp-x.y.z simplesamlphp
+    mkdir google-idp
+    /usr/local/bin/composer require cirrusidentity/simplesamlphp-module-authoauth2
     ````
+    This will create a directory ``vendor`` in the current directory ``/var/google-idp``.
 
 1.  Configure Apache
-
     *   Open ``/etc/httpd/conf.d/ssl.conf``:
         ````bash
         <VirtualHost *>
             ServerName google-idp.gis.bgu.tum.de
             DocumentRoot "/var/www/html"
     
-            SetEnv SIMPLESAMLPHP_CONFIG_DIR /var/simplesamlphp/config
+            SetEnv SIMPLESAMLPHP_CONFIG_DIR /var/google-idp/vendor/simplesamlphp/simplesamlphp/config
     
-            Alias /simplesaml /var/simplesamlphp/www
+            Alias /simplesaml /var/google-idp/vendor/simplesamlphp/simplesamlphp/www
         
             SSLCertificateFile /etc/pki/tls/certs/google-idp_cert.pem
             SSLCertificateKeyFile /etc/pki/tls/certs/google-idp_key.pem
             SSLCertificateChainFile /etc/pki/tls/certs/google-idp_chain.pem
     
-            <Directory /var/simplesamlphp/www>
+            <Directory /var/google-idp/vendor/simplesamlphp/simplesamlphp/www>
                 Require all granted
             </Directory>
         </VirtualHost>
         ````
-    
-    *   Apache needs permission to display web pages and execute PHP files:
-        ````bash
-        chmod +x -R /var/simplesamlphp/
-        chcon -R -t httpd_sys_content_t /var/simplesamlphp/
-        ````
-   
-1.  *(Alternatively to Apache)* Configure NGINX
 
-    *   Open ``/etc/nginx/nginx.conf``:
-        ````bash
-        server {
-            listen 443 ssl;
-            server_name idp.example.com;
-    
-            ssl_certificate        /etc/pki/tls/certs/google-idp_cert.pem;
-            ssl_certificate_key    /etc/pki/tls/certs/google-idp_key.pem;
-            ssl_protocols          TLSv1.3 TLSv1.2;
-            ssl_ciphers            EECDH+AESGCM:EDH+AESGCM;
-    
-            location ^~ /simplesaml {
-                alias /var/simplesamlphp/www;
-    
-                location ~ ^(?<prefix>/simplesaml)(?<phpfile>.+?\.php)(?<pathinfo>/.*)?$ {
-                    include          fastcgi_params;
-                    #fastcgi_pass     $fastcgi_pass;
-                    fastcgi_pass 127.0.0.1:9000;
-                    fastcgi_param SCRIPT_FILENAME $document_root$phpfile;
-    
-                    # Must be prepended with the baseurlpath
-                    fastcgi_param SCRIPT_NAME /simplesaml$phpfile;
-    
-                    fastcgi_param PATH_INFO $pathinfo if_not_empty;
-                }
-            }
-        }
-        ````
+1.  Download and install the [official SimpleSAMLphp](https://simplesamlphp.org/docs/stable/simplesamlphp-install)
+    ````bash
+    cd /tmp
+    wget https://github.com/simplesamlphp/simplesamlphp/releases/download/v1.18.8/simplesamlphp-1.18.8.tar.gz
+    tar xzf simplesamlphp-1.18.8.tar.gz
+    rm -f simplesamlphp-1.18.8.tar.gz
+    mv simplesamlphp-x.y.z simplesamlphp
+    ````
+
+1.  Copy files:
+    ````bash
+    cp /tmp/simplesamlphp/config/* /var/google-idp/vendor/simplesamlphp/simplesamlphp/config/
+    cp /tmp/simplesamlphp/metadata/* /var/google-idp/vendor/simplesamlphp/simplesamlphp/metadata/
+    ````
     
 1.  Configure SimpleSAMLphp
 
-    *   Open ``/var/simplesamlphp/config/config.conf``:
+    *   Open ``/var/google-idp/vendor/simplesamlphp/simplesamlphp/config/config.conf``:
         ````bash
         'baseurlpath' => 'https://google-idp.gis.bgu.tum.de/simplesaml/',
         
@@ -167,44 +114,30 @@ The following instructions are taken from the
     create an OAuth application. Then create credentials for an OAuth web application.
     This will give a Google client ID and a secret.
 
-1.  Configure the file ``/var/simplesamlphp/config/authsources.php`` 
+1.  Configure the file ``/var/google-idp/vendor/simplesamlphp/simplesamlphp/config/authsources.php`` 
     (more information on the configuration parameters 
-    [here](https://simplesamlphp.org/docs/stable/simplesamlphp-reference-sp-remote)):
+    [here](https://github.com/cirrusidentity/simplesamlphp-module-authoauth2#generic-google)):
     ````bash
-    'google' => [
-        'sign.logout' => true,
-        'validate.logout' => true,
-        'redirect.sign' => true,
-        'privatekey' => '/etc/pki/tls/certs/google-idp_key.pem',
-        'certificate' => '/etc/pki/tls/certs/google-idp_cert.pem',
-
-        'authgoogleOIDC:GoogleOIDC',
-        'key' =>'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com',
-        'secret' => 'YOUR_GOOGLE_SECRET',
+    'genericGoogleTest' => [
+        'authoauth2:OAuth2',
+        // *** Google Endpoints ***
+        'urlAuthorize' => 'https://accounts.google.com/o/oauth2/auth',
+        'urlAccessToken' => 'https://accounts.google.com/o/oauth2/token',
+        'urlResourceOwnerDetails' => 'https://www.googleapis.com/oauth2/v3/userinfo',
+        // *** My application ***
+        'clientId' => 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com',
+        'clientSecret' => 'YOUR_GOOGLE_SECRET',
+        'scopes' =>  array(
+            'openid',
+            'email',
+            'profile'
+        ),
+        'scopeSeparator' => ' ',
     ],
     ````
     
-1.  Enable Google OIDC
-    *   Clone repo:
-        ````bash
-        cd /tmp
-        git clone https://github.com/sylvainmed/simplesamlphp
-        ````
-        
-    *   Copy modules to working directory:
-        ````bash
-        cd /tmp/simplesamlphp/modules
-        cp -R authgoogle* /var/simplesamlphp/modules
-        ````
-        
-    *   Restore permissions:
-        ````bash
-        restorecon -RvF /var/simplesamlphp/modules/authgoogle*
-        restorecon -RvF /var/simplesamlphp/lib
-        restorecon -RvF /var/simplesamlphp/modules/core
-        ````
-    
-1.  Configure the file ``/var/simplesamlphp/metadata/saml20-sp-remote.php`` to trust SSDSOS1, SSDSOS2 and SSDAS
+1.  Configure the file ``/var/google-idp/vendor/simplesamlphp/simplesamlphp/metadata/saml20-sp-remote.php``
+    to trust SSDSOS1, SSDSOS2 and SSDAS
     ````php
     /*
      * SSDSOS1
@@ -300,4 +233,21 @@ The following instructions are taken from the
     ];
     ````
     
-1.  Delete all the examples in ``/var/simplesamlphp/metadata/saml20-sp-remote.php``.
+1.  Delete all the examples in ``/var/google-idp/vendor/simplesamlphp/simplesamlphp/saml20-sp-remote.php``.
+
+1.  Apache needs permission to display web pages and execute PHP files
+    ````bash
+    chmod +x -R /var/google-idp/
+    chcon -R -t httpd_sys_content_t /var/google-idp/
+    ````
+
+1.  Add the following URL to the list of authorized redirect URLs in the 
+    [Google API Console](https://console.developers.google.com/)
+    ````url
+    https://google-idp.gis.bgu.tum.de/simplesaml/module.php/authoauth2/linkback.php
+    ````
+    
+1.  Restart Apache
+    ````bash
+    systemctl restart httpd
+    ````
