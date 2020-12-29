@@ -6,7 +6,7 @@
 
 1.  First install Apache, Firewall, PHP, etc. as described in [AS](../AS/authorization-server/README.md).
 
-1.  NGINX
+1.  *(Alternatively to Apache)* NGINX
 
     *   Install:
         ````bash
@@ -62,7 +62,8 @@ hence a self-signed certificate would suffice here:
     chmod +x google-idp_key.pem
     ````
 
-*   Remember to add the chain certificate ``/etc/ssl/certs/google-idp_chain.pem`` as well!
+*   Remember to add the chain certificate ``/etc/ssl/certs/google-idp_chain.pem`` 
+    as well if this certificate is not self-signed.
 
 *   If ``httpd`` is unable to start, run the following command:
     ````bash
@@ -111,7 +112,7 @@ The following instructions are taken from the
         chcon -R -t httpd_sys_content_t /var/simplesamlphp/
         ````
    
-1.  Configure NGINX
+1.  *(Alternatively to Apache)* Configure NGINX
 
     *   Open ``/etc/nginx/nginx.conf``:
         ````bash
@@ -142,7 +143,7 @@ The following instructions are taken from the
         }
         ````
     
-1.  Configure SimpleSAMLphp:
+1.  Configure SimpleSAMLphp
 
     *   Open ``/var/simplesamlphp/config/config.conf``:
         ````bash
@@ -183,7 +184,27 @@ The following instructions are taken from the
     ],
     ````
     
-1.  Configure the file ``/var/simplesamlphp/metadata/saml20-sp-remote.php`` to trust SSDSOS1, SSDSOS2 and SSDAS:
+1.  Enable Google OIDC
+    *   Clone repo:
+        ````bash
+        cd /tmp
+        git clone https://github.com/sylvainmed/simplesamlphp
+        ````
+        
+    *   Copy modules to working directory:
+        ````bash
+        cd /tmp/simplesamlphp/modules
+        cp -R authgoogle* /var/simplesamlphp/modules
+        ````
+        
+    *   Restore permissions:
+        ````bash
+        restorecon -RvF /var/simplesamlphp/modules/authgoogle*
+        restorecon -RvF /var/simplesamlphp/lib
+        restorecon -RvF /var/simplesamlphp/modules/core
+        ````
+    
+1.  Configure the file ``/var/simplesamlphp/metadata/saml20-sp-remote.php`` to trust SSDSOS1, SSDSOS2 and SSDAS
     ````php
     /*
      * SSDSOS1
