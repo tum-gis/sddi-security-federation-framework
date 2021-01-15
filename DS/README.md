@@ -96,7 +96,7 @@ In order to compile the list of IdPs, you need to download the following SAML2 m
   cd /opt/discovery-service
   curl -k https://google-idp.gis.bgu.tum.de/simplesaml/saml2/idp/metadata.php -o google-idp-metadata.xml 
   ````
-* eduGain: You can download this file from the DFN repository: 
+* eduGain: You can download the following files from the DFN repository: 
   ````bash
   cd /opt/discovery-service
   curl https://www.aai.dfn.de/fileadmin/metadata/dfn-aai-edugain+idp-metadata.xml -o dfn-aai-edugain+idp-metadata.xml 
