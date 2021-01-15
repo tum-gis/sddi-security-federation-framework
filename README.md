@@ -13,7 +13,12 @@ The API description of the Authorization Server is available as OpenAPI located 
 
 The test cases for ensuring the correct functioning of the Authorization Server are available from the [test case documentation](AS/authorization-server/test/AS/TEST.md) file. That documentation also contains a description how to execute the tests with an Authorization Server deployment.
 
-In collaboration with: **Secure Dimensions GmbH**.
+In collaboration with: 
+[**Secure Dimensions GmbH**](https://www.secure-dimensions.de/index.html.de).
     
-Maintainer: **Son H. Nguyen**, Chair of Geoinformatics, Department of Aerospace and Geodesy, Technical University of Munich.
+Maintainer: 
+[**Son H. Nguyen**](https://www.lrg.tum.de/en/gis/our-team/staff/son-h-nguyen/), 
+[Chair of Geoinformatics](https://www.lrg.tum.de/en/gis/home/), 
+[Department of Aerospace and Geodesy](https://www.lrg.tum.de/en/flr/home/), 
+[Technical University of Munich](https://www.tum.de/en/).
 
