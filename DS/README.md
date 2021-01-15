@@ -139,24 +139,6 @@ This is a manual process and can be done via the following steps:
   ini_set('memory_limit', '200M');
   ````
 
-[comment]: <> (* Modify `compose_metadata.sh` file to reflect the file names for the SAML2 metadata &#40;lines 14 and 15&#41;.)
-
-[comment]: <> (* Execute the following commands:)
-
-[comment]: <> (  ````)
-
-[comment]: <> (  cd /opt/discovery-service)
-
-[comment]: <> (  ./compose_metadata.sh > metadata.xml)
-
-[comment]: <> (  php createIDProviderConfig.php metadata.xml > html/IDProvider.conf.php)
-
-[comment]: <> (  cd html)
-
-[comment]: <> (  php readMetadata.php)
-
-[comment]: <> (  ````)
-
 ## Configure Apache server for WAYF
 
 Configure the file ``/etc/httpd/conf.d/ssl.conf`` using the parameters given in
