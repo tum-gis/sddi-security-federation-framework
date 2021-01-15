@@ -93,28 +93,74 @@ In order to compile the list of IdPs, you need to download the following SAML2 m
 * Google IdP: You can download the SAML2 metadata URL via the URL specific for your installation. 
   The URL is displayed in the SimpleSAMLphp GUI: 
   ````bash
-  https://google-idp.gis.bgu.tum.de/simplesaml/module.php/core/frontpage_federation.php
+  cd /opt/discovery-service
+  curl -k https://google-idp.gis.bgu.tum.de/simplesaml/saml2/idp/metadata.php -o google-idp-metadata.xml 
   ````
 * eduGain: You can download this file from the DFN repository: 
   ````bash
   cd /opt/discovery-service
-  curl http://www.aai.dfn.de/fileadmin/metadata/dfn-aai-edugain+idp-metadata.xml -o dfn-aai-edugain+idp-metadata.xml
+  curl https://www.aai.dfn.de/fileadmin/metadata/dfn-aai-edugain+idp-metadata.xml -o dfn-aai-edugain+idp-metadata.xml 
+  curl https://www.aai.dfn.de/fileadmin/metadata/dfn-aai-idp-metadata.xml -o dfn-aai-idp-metadata.xml 
   ````
+  If the name of these metadata files were changed, 
+  reflect them in the file ``/opt/discovery-service/compose_metadata.sh``.
+  
+* Edit the file ``/opt/discovery-service/createIDProviderConfig.php``:
+  Replace ``<entityID of the Google IdP>`` in line 166 with the metadata URL of the Google IdP,
+  such as:
+  
+  https://google-idp.gis.bgu.tum.de/simplesaml/saml2/idp/metadata.php
+  
 
 Before the WAYF can be used for the first time **and** each time the list of IdPs changes, 
 the WAYF's list of IdPs must be synchronized. 
 This is a manual process and can be done via the following steps:
 
-* Modify `compose_metadata.sh` file to reflect the file names for the SAML2 metadata (lines 14 and 15).
-
-* Execute the following commands:
-  ````
+* Run the following commands:
+  ```bash
   cd /opt/discovery-service
   ./compose_metadata.sh > metadata.xml
+  ```
+
+* Edit ``/opt/discover-service/metadata.xml``:
+  * Make sure there is only one ``<?xml...>`` in the entire document
+  
+* Run the following commands:
+  ````bash
+  cd /opt/discovery-service
   php createIDProviderConfig.php metadata.xml > html/IDProvider.conf.php
   cd html
   php readMetadata.php
   ````
+  
+* If more memory is needed, add the following lines to the beginning of the ``readMetadata.php`` file:
+  ````php
+  // Increase memory size for big metadata files
+  ini_set('memory_limit', '200M');
+  ````
+
+[comment]: <> (* Modify `compose_metadata.sh` file to reflect the file names for the SAML2 metadata &#40;lines 14 and 15&#41;.)
+
+[comment]: <> (* Execute the following commands:)
+
+[comment]: <> (  ````)
+
+[comment]: <> (  cd /opt/discovery-service)
+
+[comment]: <> (  ./compose_metadata.sh > metadata.xml)
+
+[comment]: <> (  php createIDProviderConfig.php metadata.xml > html/IDProvider.conf.php)
+
+[comment]: <> (  cd html)
+
+[comment]: <> (  php readMetadata.php)
+
+[comment]: <> (  ````)
+
+## Configure Apache server for WAYF
+
+Configure the file ``/etc/httpd/conf.d/ssl.conf`` using the parameters given in
+[this config file](etc/httpd/conf.d/ds.conf).
 
 ## Test
 Once the configuration is complete, you can open the WAYF in a Web Browser and check if all expected IdP organizations are listed. The URL to use is `https://<your domain name for the DS>/WAYF`. 
