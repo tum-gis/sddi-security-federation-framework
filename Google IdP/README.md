@@ -92,7 +92,7 @@ hence a self-signed certificate would suffice here:
     
 1.  Configure SimpleSAMLphp
 
-    *   Open ``/var/google-idp/vendor/simplesamlphp/simplesamlphp/config/config.conf``:
+    *   Open ``/var/google-idp/vendor/simplesamlphp/simplesamlphp/config/config.php``:
         ````bash
         'baseurlpath' => 'https://google-idp.gis.bgu.tum.de/simplesaml/',
         
@@ -106,6 +106,8 @@ hence a self-signed certificate would suffice here:
         
         # http://php.net/manual/en/timezones.php
         'timezone' => 'Europe/Berlin',
+        
+        'enable.saml20-idp' => true,
         ````
     
 ### Set up SimpleSAMLphp Identity Provider
@@ -120,7 +122,6 @@ hence a self-signed certificate would suffice here:
     [here](https://github.com/cirrusidentity/simplesamlphp-module-authoauth2#generic-google)):
     ````php
      'google' => [
-        'saml:SP',
         'authoauth2:OAuth2',
         'template' => 'GoogleOIDC',
         // *** Certs ***
@@ -155,7 +156,50 @@ hence a self-signed certificate would suffice here:
     'certificate' => '/etc/pki/tls/certs/google-idp_cert.pem',
 
     'auth' => 'google',
+    
+    // *** Metadata attributes ***
+    'UIInfo' => [
+        'DisplayName' => [
+            'en' => 'SDDI Google IdP',
+            'de' => 'SDDI Google IdP',
+        ],
+        'Description' => [
+            'en' => 'Google IdP for the SDDI Security Framework',
+            'de' => 'Google IdP für das Projekt SDDI Security Framework',
+        ],
+        'InformationURL' => [
+            'en' => 'https://www.lrg.tum.de/en/gis/projects/smart-district-data-infrastructure/',
+            'de' => 'https://www.lrg.tum.de/gis/projekte/sddi/',
+        ],
+        /*
+        'PrivacyStatementURL' => [
+            'en' => 'http://example.com/privacy/en',
+            'de' => 'http://example.com/privacy/de',
+        ],
+        'Keywords' => [
+            'en' => ['communication', 'federated session'],
+            'de' => ['Kommunikation', 'Foederationssesion'],
+        ],
+        */
+        'Logo' => [
+            [
+                'url' => 'https://lh3.googleusercontent.com/COxitqgJr1sJnIDe8-jiKhxDx1FrYbtRHKJ9z_hELisAlapwE9LUPh6fcXIfb5vwpbMl4xl9H9TRFPc5NOO8Sb3VSgIBrfRYvW6cUA',
+                'height' => 16,
+                'width'  => 16,
+                //'lang'   => 'en',
+            ],
+            /*
+            [
+                'url' => 'http://example.com/logo2.png',
+                'height' => 201,
+                'width' => 401,
+            ],
+            */
+        ],
+    ],
     ````
+    Please refer to the [documentation](https://simplesamlphp.org/docs/stable/simplesamlphp-metadata-extensions-ui) 
+    for more information on the attributes used here.
 
 1.  Configure the file ``/var/google-idp/vendor/simplesamlphp/simplesamlphp/metadata/saml20-sp-remote.php``
     to trust SSDSOS1, SSDSOS2 and SSDAS
