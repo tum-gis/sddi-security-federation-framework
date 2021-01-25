@@ -1,5 +1,5 @@
 # Protecting the Service Provider
-In the current deployment of the SDDi Security Demonstrator, the SOS1 and SOS2 are protected via two different methods:
+In the current deployment of the SDDI Security Demonstrator, the SOS1 and SOS2 are protected via two different methods:
 
 * SAML (Shibboleth) sessions based on HTTP cookies
 * OAuth2 Bearer Access Tokens released from the Authorization Server
