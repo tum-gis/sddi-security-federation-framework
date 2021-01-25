@@ -351,6 +351,7 @@ The directory `.../vendor/simplesamlphp/simplesamlphp/cert` must be created and 
 Please follow your company's policy to create a private key and to obtain a globally valid certificate.
 
 Please put the private key and certificate into the `.../vendor/simplesamlphp/simplesamlphp/cert` directory and configure the associated entries in the `.../vendor/simplesamlphp/simplesamlphp/config/authsources.php` file.
+The file ``authsources.php`` can be structured as follows (or [here](/AS/simpleSAMLphp/config/authsources.php)):
 
 ```php
 <?php
@@ -389,12 +390,12 @@ $config = array(
         'sign.logout' => true,
     ),
     // This is the SAML2 SP authentication source that shall be configured to NOT request user attributes
-    'oidc-openid' => array(
+    'openid' => array(
         'saml:SP',
 
         'NameIDPolicy' => 'urn:oasis:names:tc:SAML:2.0:nameid-format:persistent',
 
-        'entityID' => 'https://' . $_SERVER['SERVER_NAME'] . '/oidc-profile',
+        'entityID' => 'https://' . $_SERVER['SERVER_NAME'] . '/openid',
 
         'discoURL' => '<this is the same URL as you provided in the AS .../config/config.php under ds_url>',
 
@@ -448,7 +449,8 @@ $config = array(
 
     'timezone' => 'Europe/Berlin',
 
-    'secretsalt' => '59fmwccn2iu3829dd209j0fj3fke0h45dslxt03f',
+    # Run tr -c -d '0123456789abcdefghijklmnopqrstuvwxyz' </dev/urandom | dd bs=32 count=1 2>/dev/null;echo
+    'secretsalt' => 'randombytesinsertedhere',
 
     'auth.adminpassword' => 'ThisIsSecure',
 
@@ -824,12 +826,79 @@ The metadata will expire after the configured time (default 96 hours). To keep t
 01 1 * * * su apache -s /bin/bash -c "cd /opt/authorization-server/vendor/simplesamlphp/simplesamlphp/metadata/ && php metarefresh.php"
 ````
 
+In addition, create or edit the file ``.../vendor/simplesamlphp/simplesamlphp/metadata/saml20-idp-remote.php`` 
+with the contents from the following page:
+https://google-idp.gis.bgu.tum.de/simplesaml/saml2/idp/metadata.php?output=xhtml
+
+Example:
+```php
+$metadata['https://google-idp.gis.bgu.tum.de/simplesaml/saml2/idp/metadata.php'] = array (
+  'metadata-set' => 'saml20-idp-remote',
+  'entityid' => 'https://google-idp.gis.bgu.tum.de/simplesaml/saml2/idp/metadata.php',
+  'SingleSignOnService' => 
+  array (
+    0 => 
+    array (
+      'Binding' => 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect',
+      'Location' => 'https://google-idp.gis.bgu.tum.de/simplesaml/saml2/idp/SSOService.php',
+    ),
+  ),
+  'SingleLogoutService' => 
+  array (
+    0 => 
+    array (
+      'Binding' => 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect',
+      'Location' => 'https://google-idp.gis.bgu.tum.de/simplesaml/saml2/idp/SingleLogoutService.php',
+    ),
+  ),
+  'certData' => '<CERT_DATA_AUTOMATICALLY_GENERATED>',
+  'NameIDFormat' => 'urn:oasis:names:tc:SAML:2.0:nameid-format:transient',
+  'UIInfo' => 
+  array (
+    'DisplayName' => 
+    array (
+      'en' => 'SDDI Google IdP',
+      'de' => 'SDDI Google IdP',
+    ),
+    'Description' => 
+    array (
+      'en' => 'Google IdP for the SDDI Security Framework',
+      'de' => 'Google IdP fuer das Projekt SDDI Security Framework',
+    ),
+    'InformationURL' => 
+    array (
+      'en' => 'https://www.lrg.tum.de/en/gis/projects/smart-district-data-infrastructure/',
+      'de' => 'https://www.lrg.tum.de/gis/projekte/sddi/',
+    ),
+    'Logo' => 
+    array (
+      0 => 
+      array (
+        'url' => 'https://lh3.googleusercontent.com/COxitqgJr1sJnIDe8-jiKhxDx1FrYbtRHKJ9z_hELisAlapwE9LUPh6fcXIfb5vwpbMl4xl9H9TRFPc5NOO8Sb3VSgIBrfRYvW6cUA',
+        'height' => 16,
+        'width' => 16,
+      ),
+    ),
+  ),
+  'contacts' => 
+  array (
+    0 => 
+    array (
+      'emailAddress' => 'son.nguyen@tum.de',
+      'contactType' => 'technical',
+      'givenName' => 'Son H. Nguyen',
+    ),
+  ),
+);
+```
+
 ### Apache Web Server
 The Apache Web Server must be configured to rewrite the API path to be executed by `as.php`. 
-This can simply be achieved by adding the following example configuration in ``as.conf``.
-This file can be stored in ``/etc/httpd/conf.d`` or ``/etc/apache2/conf/sites-enabled``.
+This can be achieved by creating a file ``.htaccess`` 
+in the root directory ``/opt/authorization-server/www``:
 
 ````
+RewriteEngine On
 RewriteCond "%{REQUEST_URI}"  "^/oauth"  [OR]
 RewriteCond "%{REQUEST_URI}"  "^/openid"  [OR]
 RewriteCond "%{REQUEST_URI}"  "^/saml" [OR]
@@ -851,13 +920,96 @@ RewriteCond "%{REQUEST_URI}"  "^/DiscoveryService"
 RewriteRule (.*) /as.php/$1 [qsappend,L]
 ````
 
-To enable the SimpleSAMLphp library, please add the following lines to the `as.conf`:
+This can simply be achieved by adding the following example configuration in ``as.conf``.
+This file can be stored in `.
+
+To enable the SimpleSAMLphp library, please create a file ``as.conf``
+in the directory ``/etc/httpd/conf.d`` or ``/etc/apache2/conf/sites-enabled``:
 
 ````
 SetEnv SIMPLESAMLPHP_CONFIG_DIR /opt/authorization-server/vendor/simplesamlphp/simplesamlphp/config
 Alias /simplesaml /opt/authorization-server/vendor/simplesamlphp/simplesamlphp/www
 ````
 
+Additionally, edit the file ``/etc/httpd/conf.d/ssl.conf``:
+```
+DocumentRoot "/opt/authorization-server/www"
+
+...
+
+Directory "/opt/authorization-server/www">
+    AllowOverride All
+    Options +FollowSymlinks
+    Require all granted
+</Directory>
+```
+
+### Other settings
+
+##### SELinux security policies
+
+The SELinux policy ``httpd_can_network_connect_db`` 
+is disabled by default to prevent connection to a remote database.
+
+Check this via:
+
+```bash
+getsebool -a | grep httpd
+```
+
+If ``httpd_can_network_connect_db`` is disabled, enable it:
+
+```bash
+setsebool -P httpd_can_network_connect_db 1
+```
+
+##### Manage SSL certificates
+
+Copy the private key and certificate to the directory ``/opt/authorization-server/pki/``:
+```bash
+cd /opt/authorization-server/pki/
+copy /etc/ssl/certs/private_key.pem ./
+copy /etc/ssl/certs/certificate.pem ./
+```
+
+Then change the owner and the group to ``apache``:
+```bash
+chown apache private_key.pem
+chown apache certificate.pem
+chgrp apache private_key.pem
+chgrp apache certificate.pem
+```
+
+Then change the permission to read-only for the owner of the private key and write-only for the owner of the certificate file:
+```bash
+chmod 400 private_key.pem
+chmod 644 certificate.pem
+```
+
+Then update the config file ``/opt/authorization-server/config/config.php`` accordingly:
+```php
+  'private_key' => '../pki/private_key.pem',
+  'public_key' => '../pki/certificate.pem',
+```
+
+##### Allow permission to write logs
+
+In CentOS, SELinux might prevent Apache from writing logs.
+To check if this is the case, see if enforcing is enabled:
+```bash
+sestatus
+```
+
+To test, disable enforcing and reload the page:
+```bash
+setenforce 0
+```
+
+If the page can be loaded correctly, then do the following:
+```bash
+setenforce 1
+chcon -R -t httpd_sys_rw_content_t log/ /opt/authorization-server/log/
+```
 
 ### Testing
 The deployed Authorization Server can be tested via a set of test applications and a Test Web Server that simulates the different applications. 

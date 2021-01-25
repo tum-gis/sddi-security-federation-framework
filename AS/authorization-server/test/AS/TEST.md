@@ -27,9 +27,9 @@ scopes_supported: [
 ]
 ````
 
-* Register with type `Client-side Web Appliction` will result in applications that are allowed to execute the `implicit` flow. In order to test the GDPR complianc, we need to have one application with no scope selected, `saml`, `openid`, `profile`, `email` and `profile + email`.
-* Register with type `Server-side Web Appliction` will result in applications that are allowed to execute the `authorization code` flow. In order to test the GDPR complianc, we need to have one application with no scope selected, `saml`, `openid`, `profile`, `email` and `profile + email`.
-* Register with type `Service Application` will result in applications that are allowed to execute the `implicit` flow. In order to test the GDPR complianc, we need to have one application with no scope selected, `saml`, `openid`, `profile`, `email` and `profile + email`.
+* Register with type `Client-side Web Appliction` will result in applications that are allowed to execute the `implicit` flow. In order to test the GDPR compliance, we need to have one application with no scope selected, `saml`, `openid`, `profile`, `email` and `profile + email`.
+* Register with type `Server-side Web Appliction` will result in applications that are allowed to execute the `authorization code` flow. In order to test the GDPR compliance, we need to have one application with no scope selected, `saml`, `openid`, `profile`, `email` and `profile + email`.
+* Register with type `Service Application` will result in applications that are allowed to execute the `implicit` flow. In order to test the GDPR compliance, we need to have one application with no scope selected, `saml`, `openid`, `profile`, `email` and `profile + email`.
 
 ### Registering Test Applications
 In order to register the test applications, simply set the `create_test_clients=true` in `.../config/config.php`. Make sure that also `create_db=true` is set.
@@ -74,7 +74,7 @@ c#> php -S 127.0.0.1:4711 -t html
 For executing the tests, please navigate your Web Browser the auto-configured test page: <http://127.0.0.1:4711>.
 
 **Note:**
-This markdown document contains incorrect URL, as the protocol and hostname are replaced with a CONSTANT identifier. To conduct the tests, a client side test web server must be exeuted (see above). This test web server uses a markdown-to-html functionality to transform the mark-down to html and to exchange the CONSTANTS with meaningful values. These values are fetched from the OpenID Connect Discovery URL which is set by the `OPENID_CONFIGURATION` environment valiable (see above).
+This markdown document contains incorrect URL, as the protocol and hostname are replaced with a CONSTANT identifier. To conduct the tests, a client side test web server must be executed (see above). This test web server uses a markdown-to-html functionality to transform the mark-down to html and to exchange the CONSTANTS with meaningful values. These values are fetched from the OpenID Connect Discovery URL which is set by the `OPENID_CONFIGURATION` environment variable (see above).
 
 
 ## Testing OAuth2 Compliance
