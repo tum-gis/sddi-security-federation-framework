@@ -357,7 +357,7 @@ The file ``authsources.php`` can be structured as follows (or [here](/AS/simpleS
 <?php
 
 /*
-Copyright © 2019 Secure Dimensions GmbH
+Copyright © 2021 Technical University of Munich
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
@@ -373,7 +373,8 @@ $config = array(
         'core:AdminPassword',
     ),
 
-    // This is the SAML2 SP authentication source that shall be configured to NOT request user attributes
+    // This is the SAML2 SP authentication source that enables the use of applications
+    // without the collection of personal data from the IdP.
     'oauth' => array(
         'saml:SP',
 
@@ -381,13 +382,205 @@ $config = array(
 
         'entityID' => 'https://' . $_SERVER['SERVER_NAME'] . '/oauth',
 
-        'discoURL' => '<this is the same URL as you provided in the AS .../config/config.php under ds_url>',
+        'discoURL' => 'https://<DISCOVERY_SERVER>/WAYF',
 
-        'privatekey' => '<filename for the private key>.pem',
+        'privatekey' => '/opt/authorization-server/vendor/simplesamlphp/simplesamlphp/cert/<KEY_FILE>',
 
-        'certificate' => '<filename for the certificate>.crt',
+        'certificate' => '/opt/authorization-server/vendor/simplesamlphp/simplesamlphp/cert/<CERT_FILE>',
 
         'sign.logout' => true,
+		
+		'SingleLogoutServiceBinding' => array(
+            'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect',
+            'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST',
+        ),
+        'SingleLogoutServiceLocation' => 'https://' . $_SERVER['SERVER_NAME'] . '/simplesaml/module.php/saml/sp/saml2-logout.php/oauth',
+
+        'UIInfo' => array(
+            'DisplayName' => array(
+                'en' => 'SDDI Authorization Server (oauth)',
+                'de' => 'SDDI Authorization Server (oauth)',
+            ),
+            'Description' => array(
+                'en' => 'SDDI Authorization Server (oauth) without the collection of personal data',
+                'de' => 'SDDI Authorization Server (oauth) ohne Sammlung personenbezogener Daten',
+            ),
+            'InformationURL' => array(
+                'en' => 'https://www.lrg.tum.de/en/gis/projects/smart-district-data-infrastructure/',
+                'de' => 'https://www.lrg.tum.de/gis/projekte/sddi/',
+            ),
+            'PrivacyStatementURL' => array(
+                'en' => 'https://' . $_SERVER['SERVER_NAME'] . '/PrivacyStatement',
+                'de' => 'https://' . $_SERVER['SERVER_NAME'] . '/PrivacyStatement',
+            ),
+        ),
+
+        'contacts' => array(
+            array(
+                'contactType'       => 'support',
+                'emailAddress'      => 'john.doe@example.com',
+                'givenName'         => 'John',
+                'surName'           => 'Doe',
+                'telephoneNumber'   => '+0123456789',
+                'company'           => 'Example Inc.',
+            ),
+            array(
+                'contactType'       => 'technical',
+                'emailAddress'      => 'john.doe@example.com',
+                'givenName'         => 'John',
+                'surName'           => 'Doe',
+                'telephoneNumber'   => '+0123456789',
+                'company'           => 'Example Inc',
+            ),
+        ),
+
+        'OrganizationName' => array(
+            'en' => 'Technical University of Munich',
+            'de' => 'Technische Universitaet Muenchen',
+        ),
+        'OrganizationDisplayName' => array(
+            'en' => 'Technical University of Munich',
+            'de' => 'Technische Universitaet Muenchen',
+        ),
+        'OrganizationURL' => array(
+            'en' => 'https://www.tum.de/en/',
+            'de' => 'https://www.tum.de/',
+        ),
+
+        'name' => array(
+            // Name required for AttributeConsumingService-element
+            'en' => 'SDDI Authorization Server (oauth)',
+            'de' => 'SDDI Authorization Server (oauth)',
+        ),
+        'description' => array(
+            'en' => 'SDDI Authorization Server (oauth) without the collection of personal data',
+            'de' => 'SDDI Authorization Server (oauth) ohne Sammlung personenbezogener Daten',
+        ),
+        'attributes' => array(
+            // Specify friendly names for these attributes
+            'o' => 'urn:oid:2.5.4.10',
+        ),
+        'attributes.required' => array(
+        ),
+        'attributes.NameFormat' => 'urn:oasis:names:tc:SAML:2.0:attrname-format:uri',
+        'attributes.index' => 1,
+
+        'AssertionConsumerService' => array(
+            array(
+                'index' => 0,
+                'Location' => 'https://' . $_SERVER['SERVER_NAME'] . '/simplesaml/module.php/saml/sp/saml2-acs.php/oauth',
+                'Binding' => 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST',
+            ),
+            array(
+                'index' => 1,
+                'Location' => 'https://' . $_SERVER['SERVER_NAME'] . '/simplesaml/module.php/saml/sp/saml2-acs.php/oauth',
+                'Binding' => 'urn:oasis:names:tc:SAML:2.0:bindings:PAOS',
+            ),
+        ),
+    ),
+    // This is the SAML2 SP authentication source that shall be configured to NOT request user attributes
+    'oidc-profile' => array(
+        'saml:SP',
+
+        'NameIDPolicy' => 'urn:oasis:names:tc:SAML:2.0:nameid-format:persistent',
+
+        'entityID' => 'https://' . $_SERVER['SERVER_NAME'] . '/oidc-profile',
+
+        'discoURL' => 'https://<DISCOVERY_SERVER>/WAYF',
+
+        'privatekey' => '/opt/authorization-server/vendor/simplesamlphp/simplesamlphp/cert/<KEY_FILE>',
+
+        'certificate' => '/opt/authorization-server/vendor/simplesamlphp/simplesamlphp/cert/<CERT_FILE>',
+
+        'sign.logout' => true,
+
+        'SingleLogoutServiceBinding' => array(
+            'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect',
+            'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST',
+        ),
+        'SingleLogoutServiceLocation' => 'https://' . $_SERVER['SERVER_NAME'] . '/simplesaml/module.php/saml/sp/saml2-logout.php/oidc-profile',
+
+        'UIInfo' => array(
+            'DisplayName' => array(
+                'en' => 'SDDI Authorization Server (oid-profile)',
+                'de' => 'SDDI Authorization Server (oidc-profile)',
+            ),
+            'Description' => array(
+                'en' => 'SDDI Authorization Server (oidc-profile)',
+                'de' => 'SDDI Authorization Server (oidc-profile)',
+            ),
+            'InformationURL' => array(
+                'en' => 'https://www.lrg.tum.de/en/gis/projects/smart-district-data-infrastructure/',
+                'de' => 'https://www.lrg.tum.de/gis/projekte/sddi/',
+            ),
+            'PrivacyStatementURL' => array(
+                'en' => 'https://' . $_SERVER['SERVER_NAME'] . '/PrivacyStatement',
+                'de' => 'https://' . $_SERVER['SERVER_NAME'] . '/PrivacyStatement',
+            ),
+        ),
+
+        'contacts' => array(
+            array(
+                'contactType'       => 'support',
+                'emailAddress'      => 'john.doe@example.com',
+                'givenName'         => 'John',
+                'surName'           => 'Doe',
+                'telephoneNumber'   => '+0123456789',
+                'company'           => 'Example Inc.',
+            ),
+            array(
+                'contactType'       => 'technical',
+                'emailAddress'      => 'john.doe@example.com',
+                'givenName'         => 'John',
+                'surName'           => 'Doe',
+                'telephoneNumber'   => '+0123456789',
+                'company'           => 'Example Inc.',
+            ),
+        ),
+
+        'OrganizationName' => array(
+            'en' => 'Technical University of Munich',
+            'de' => 'Technische Universitaet Muenchen',
+        ),
+        'OrganizationDisplayName' => array(
+            'en' => 'Technical University of Munich',
+            'de' => 'Technische Universitaet Muenchen',
+        ),
+        'OrganizationURL' => array(
+            'en' => 'https://www.tum.de/en/',
+            'de' => 'https://www.tum.de/',
+        ),
+
+        'name' => array(
+            // Name required for AttributeConsumingService-element
+            'en' => 'SDDI Authorization Server (oidc-profile)',
+            'de' => 'SDDI Authorization Server (oidc-profile)',
+        ),
+        'description' => array(
+            'en' => 'SDDI Authorization Server (oidc-profile)',
+            'de' => 'SDDI Authorization Server (oidc-profile)',
+        ),
+        'attributes' => array(
+            // Specify friendly names for these attributes
+            'eduPersonTargetedID' => 'urn:oid:1.3.6.1.4.1.5923.1.1.1.10',
+            'givenName' => 'urn:oid:2.5.4.42',
+            'sn' => 'urn:oid:2.5.4.4',
+        ),
+        'attributes.required' => array (
+            'eduPersonTargetedID' => 'urn:oid:1.3.6.1.4.1.5923.1.1.1.10',
+            'givenName' => 'urn:oid:2.5.4.42',
+            'sn' => 'urn:oid:2.5.4.4',
+        ),
+        'attributes.NameFormat' => 'urn:oasis:names:tc:SAML:2.0:attrname-format:uri',
+        'attributes.index' => 1,
+
+        'AssertionConsumerService' => array(
+            array(
+                'index' => 0,
+                'Location' => 'https://' . $_SERVER['SERVER_NAME'] . '/simplesaml/module.php/saml/sp/saml2-acs.php/oidc-profile',
+                'Binding' => 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST',
+            ),
+        ),
     ),
     // This is the SAML2 SP authentication source that shall be configured to NOT request user attributes
     'openid' => array(
@@ -397,16 +590,108 @@ $config = array(
 
         'entityID' => 'https://' . $_SERVER['SERVER_NAME'] . '/openid',
 
-        'discoURL' => '<this is the same URL as you provided in the AS .../config/config.php under ds_url>',
+        'discoURL' => 'https://<DISCOVERY_SERVER>/WAYF',
 
-        'privatekey' => '<filename for the private key>.pem',
+        'privatekey' => '/opt/authorization-server/vendor/simplesamlphp/simplesamlphp/cert/<KEY_FILE>',
 
-        'certificate' => '<filename for the certificate>.crt',
+        'certificate' => '/opt/authorization-server/vendor/simplesamlphp/simplesamlphp/cert/<CERT_FILE>',
 
         'sign.logout' => true,
-    )
+
+        'SingleLogoutServiceBinding' => array(
+            'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect',
+            'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST',
+        ),
+        'SingleLogoutServiceLocation' => 'https://' . $_SERVER['SERVER_NAME'] . '/simplesaml/module.php/saml/sp/saml2-logout.php/openid',
+
+        'UIInfo' => array(
+            'DisplayName' => array(
+                'en' => 'SDDI Authorization Server (openid)',
+                'de' => 'SDDI Authorization Server (openid)',
+            ),
+            'Description' => array(
+                'en' => 'SDDI Authorization Server (openid)',
+                'de' => 'SDDI Authorization Server (openid)',
+            ),
+            'InformationURL' => array(
+                'en' => 'https://www.lrg.tum.de/en/gis/projects/smart-district-data-infrastructure/',
+                'de' => 'https://www.lrg.tum.de/gis/projekte/sddi/',
+            ),
+            'PrivacyStatementURL' => array(
+                'en' => 'https://ssdas.gis.bgu.tum.de/PrivacyStatement',
+                'de' => 'https://ssdas.gis.bgu.tum.de/PrivacyStatement',
+            ),
+        ),
+
+        'contacts' => array(
+            array(
+                'contactType'       => 'support',
+                'emailAddress'      => 'john.doe@example.com',
+                'givenName'         => 'John',
+                'surName'           => 'Doe',
+                'telephoneNumber'   => '+0123456789',
+                'company'           => 'Example Inc.',
+            ),
+            array(
+                'contactType'       => 'technical',
+                'emailAddress'      => 'john.doe@example.com',
+                'givenName'         => 'John',
+                'surName'           => 'Doe',
+                'telephoneNumber'   => '+0123456789',
+                'company'           => 'Example Inc.',
+            ),
+        ),
+
+        'OrganizationName' => array(
+            'en' => 'Technical University of Munich',
+            'de' => 'Technische Universitaet Muenchen',
+        ),
+        'OrganizationDisplayName' => array(
+            'en' => 'Technical University of Munich',
+            'de' => 'Technische Universitaet Muenchen',
+        ),
+        'OrganizationURL' => array(
+            'en' => 'https://www.tum.de/en/',
+            'de' => 'https://www.tum.de/',
+        ),
+
+        'name' => array(
+            // Name required for AttributeConsumingService-element
+            'en' => 'SDDI Authorization Server (oidc-profile)',
+            'de' => 'SDDI Authorization Server (oidc-profile)',
+        ),
+        'description' => array(
+            'en' => 'SDDI Authorization Server (oidc-profile)',
+            'de' => 'SDDI Authorization Server (oidc-profile)',
+        ),
+        'attributes' => array(
+            // Specify friendly names for these attributes
+            'eduPersonTargetedID' => 'urn:oid:1.3.6.1.4.1.5923.1.1.1.10',
+            'givenName' => 'urn:oid:2.5.4.42',
+            'sn' => 'urn:oid:2.5.4.4',
+        ),
+        'attributes.required' => array (
+            'eduPersonTargetedID' => 'urn:oid:1.3.6.1.4.1.5923.1.1.1.10',
+            'givenName' => 'urn:oid:2.5.4.42',
+            'sn' => 'urn:oid:2.5.4.4',
+        ),
+        'attributes.NameFormat' => 'urn:oasis:names:tc:SAML:2.0:attrname-format:uri',
+        'attributes.index' => 1,
+
+        'AssertionConsumerService' => array(
+            array(
+                'index' => 0,
+                'Location' => 'https://' . $_SERVER['SERVER_NAME'] . '/simplesaml/module.php/saml/sp/saml2-acs.php/openid',
+                'Binding' => 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST',
+            ),
+        ),
+    ),
 );
 ```
+
+For more information on the ``authsources.php`` file, please refer to
+[saml:sp options](https://simplesamlphp.org/docs/stable/saml:sp) and
+[metadata extensions](https://simplesamlphp.org/docs/stable/simplesamlphp-metadata-extensions-ui).
 
 Then change
 + ``technicalcontact_name`` 
@@ -444,8 +729,9 @@ $config = array(
     'datadir' => 'data/',
     'tempdir' => '/tmp/simplesaml',
 
-    'technicalcontact_name' => '<Your Name>',
-    'technicalcontact_email' => '<Your Email>',
+    // Check contacts in authsources.php if 'technical' has already been entered, if yes then do not use these lines
+    // 'technicalcontact_name' => '<Your Name>',
+    // 'technicalcontact_email' => '<Your Email>',
 
     'timezone' => 'Europe/Berlin',
 
@@ -613,6 +899,15 @@ For example in case the AS is operated in Germany and you want to have the AS al
 then you must register the SPs metadata with them. 
 Please follow the DFN AAI instructions [here](https://doku.tid.dfn.de/:de:start).
 
+In addition to an SSL certificate of type ``Shibboleth/SAML``,
+the authorization server must also be registered in the DFN-AAI federation.
+In order to achieve this, some metadata are required, see [instructions](https://doku.lrz.de/x/G4RkAw).
+
+The metadata of the SPs can be found using the following URLs:
+[https://<AUTHORIZATION_SERVER>/simplesaml/module.php/saml/sp/metadata.php/oauth](https://<AUTHORIZATION_SERVER>/simplesaml/module.php/saml/sp/metadata.php/oauth)
+[https://<AUTHORIZATION_SERVER>/simplesaml/module.php/saml/sp/metadata.php/oidc-profile](https://<AUTHORIZATION_SERVER>/simplesaml/module.php/saml/sp/metadata.php/oidc-profile)
+[https://<AUTHORIZATION_SERVER>/simplesaml/module.php/saml/sp/metadata.php/openid](https://<AUTHORIZATION_SERVER>/simplesaml/module.php/saml/sp/metadata.php/openid)
+
 When registering the SP instances with the Coordination Center, it is important to keep in mind 
 that the configuration of the two instances differ regarding the request of user attributes: 
 The `oauth` instance must be configured to not force the IdP to release user attributes 
@@ -655,14 +950,12 @@ THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR I
 */
 
 $config = array(
-
 	'sets' => array(
-
 		'dfn' => array(
 			'cron'		=> array('daily'),
 			'sources'	=> array(
 				array(
-					'src' => 'https://www.aai.dfn.de/fileadmin/metadata/dfn-aai-basic-metadata.xml',
+                    'src' => 'https://www.aai.dfn.de/fileadmin/metadata/dfn-aai-basic-metadata.xml',
 					'certificates' => array(
 						'dfn-aai.g2.pem'
 					),
@@ -672,11 +965,22 @@ $config = array(
 							51 => array('class' => 'core:AttributeMap', 'oid2name'),
 						),
 					),
-
+				),
+				array(
+                    'src' => 'https://www.aai.dfn.de/fileadmin/metadata/dfn-aai-test-metadata.xml',
+					'certificates' => array(
+						'dfn-aai.g2.pem'
+					),
+					'template' => array(
+						'tags'	=> array('dfn'),
+						'authproc' => array(
+							51 => array('class' => 'core:AttributeMap', 'oid2name'),
+						),
+					),
 				),
 			),
-			'expireAfter' 		=> 60*60*24*4, // Maximum 4 days cache time
-			'outputDir' 	=> 'metadata/metafresh-dfn/',
+			'expireAfter' => 60*60*24*4, // Maximum 4 days cache time
+			'outputDir' => 'metadata/metafresh-dfn/',
 
 			/*
 			 * Which output format the metadata should be saved as.
@@ -684,29 +988,28 @@ $config = array(
 			 */
 			'outputFormat' => 'flatfile',
 		),
-                'eduGain' => array(
-                        'cron'          => array('daily'),
-                        'sources'       => array(
-                                array(
-                                        'src' => 'https://www.aai.dfn.de/fileadmin/metadata/dfn-aai-edugain+idp-metadata.xml',
-                                        'template' => array(
-                                                'tags'  => array('eduGain'),
-                                                'authproc' => array(
-                                                        51 => array('class' => 'core:AttributeMap', 'oid2name'),
-                                                ),
-                                        ),
-
-                                ),
+        'eduGain' => array(
+            'cron' => array('daily'),
+            'sources' => array(
+                array(
+                    'src' => 'https://www.aai.dfn.de/fileadmin/metadata/dfn-aai-edugain+idp-metadata.xml',
+                    'template' => array(
+                        'tags'  => array('eduGain'),
+                        'authproc' => array(
+                            51 => array('class' => 'core:AttributeMap', 'oid2name'),
                         ),
-                        'expireAfter'           => 60*60*24*4, // Maximum 4 days cache time
-                        'outputDir'     => 'metadata/metafresh-eduGain/',
-
-                        /*
-                         * Which output format the metadata should be saved as.
-                         * Can be 'flatfile' or 'serialize'. 'flatfile' is the default.
-                         */
-                        'outputFormat' => 'flatfile',
+                    ),
                 ),
+            ),
+            'expireAfter' => 60*60*24*4, // Maximum 4 days cache time
+            'outputDir' => 'metadata/metafresh-eduGain/',
+
+            /*
+             * Which output format the metadata should be saved as.
+             * Can be 'flatfile' or 'serialize'. 'flatfile' is the default.
+             */
+            'outputFormat' => 'flatfile',
+        ),
 	),
 );
 ```
@@ -938,6 +1241,12 @@ DocumentRoot "/opt/authorization-server/www"
 ...
 
 Directory "/opt/authorization-server/www">
+    AllowOverride All
+    Options +FollowSymlinks
+    Require all granted
+</Directory>
+
+Directory "/opt/authorization-server/vendor/simplesamlphp/simplesamlphp/www">
     AllowOverride All
     Options +FollowSymlinks
     Require all granted

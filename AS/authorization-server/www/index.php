@@ -76,7 +76,7 @@
         <img class="card-img-top" src="/images/icon-register-services.png" alt="register services">
         <div class="card-body">
           <h5 class="card-title">Application Listing</h5>
-          <p class="card-text">You have previously registerd your application and would like to see the details?</p>
+          <p class="card-text">You have previously registered your application and would like to see the details?</p>
           <a href="/listapps" target="_APPS" class="btn btn-success">Application Listing</a>
         </div>
       </div>
