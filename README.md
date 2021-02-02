@@ -13,6 +13,8 @@ The API description of the Authorization Server is available as OpenAPI located 
 
 The test cases for ensuring the correct functioning of the Authorization Server are available from the [test case documentation](AS/authorization-server/test/AS/TEST.md) file. That documentation also contains a description how to execute the tests with an Authorization Server deployment.
 
+Refer to the [troubleshooting section](Troubleshooting.md) for maintenance purposes as well as solving common errors.
+
 In collaboration with: 
 [**Secure Dimensions GmbH**](https://www.secure-dimensions.de/index.html.de).
     
