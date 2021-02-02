@@ -198,7 +198,9 @@ Modify local access:
 vi /var/lib/pgsql/11/data/pg_hba.conf
 ````
 
-Modify line `local   all             all                                     peer` to `local   all             all                                     md5` and add line `host       samlas                  php        127.0.0.1/32                      md5`.
+Modify line `local all all peer` 
+to `local all all md5` 
+and add line `host samlas php 127.0.0.1/32 md5`.
 
 ### Install the Authorization Server
 To download a copy of the AS code, simply use `git clone`. Make sure you have installed `git`.
@@ -657,12 +659,12 @@ $config = array(
 
         'name' => array(
             // Name required for AttributeConsumingService-element
-            'en' => 'SDDI Authorization Server (oidc-profile)',
-            'de' => 'SDDI Authorization Server (oidc-profile)',
+            'en' => 'SDDI Authorization Server (openid)',
+            'de' => 'SDDI Authorization Server (openid)',
         ),
         'description' => array(
-            'en' => 'SDDI Authorization Server (oidc-profile)',
-            'de' => 'SDDI Authorization Server (oidc-profile)',
+            'en' => 'SDDI Authorization Server (openid)',
+            'de' => 'SDDI Authorization Server (openid)',
         ),
         'attributes' => array(
             // Specify friendly names for these attributes
@@ -703,6 +705,7 @@ Then change
 + ``store.sql.password``
 
 of the following file `.../vendor/simplesamlphp/simplesamlphp/config/config.php`.
+For more information, please refer to the [official documentation](https://github.com/simplesamlphp/simplesamlphp/blob/master/config-templates/config.php).
 
 ```php
 <?php
@@ -729,9 +732,8 @@ $config = array(
     'datadir' => 'data/',
     'tempdir' => '/tmp/simplesaml',
 
-    // Check contacts in authsources.php if 'technical' has already been entered, if yes then do not use these lines
-    // 'technicalcontact_name' => '<Your Name>',
-    // 'technicalcontact_email' => '<Your Email>',
+    'technicalcontact_name' => '<Your Name>',
+    'technicalcontact_email' => '<Your Email>',
 
     'timezone' => 'Europe/Berlin',
 
@@ -773,7 +775,7 @@ $config = array(
 
     'proxy' => null,
 
-    'enable.saml20-idp' => false,
+    'enable.saml20-idp' => true, //false
     'enable.shib13-idp' => false,
     'enable.adfs-idp' => false,
     'enable.wsfed-sp' => false,
@@ -795,15 +797,16 @@ $config = array(
 
     'session.cookie.path' => '/',
 
-    'session.cookie.domain' => '<see SimpleSAMLphp docs for more details>',
+    // A domain value that is shared among AS, DS, WFS, SOS1 and SOS2, etc.
+    'session.cookie.domain' => '.gis.bgu.tum.de',
 
     'session.cookie.secure' => true,
 
-    'session.phpsession.cookiename' => '<you name it>',
+    'session.phpsession.cookiename' => 'SimpleSAML',
     'session.phpsession.savepath' => null,
     'session.phpsession.httponly' => true,
 
-    'session.authtoken.cookiename' => '<you name it>',
+    'session.authtoken.cookiename' => 'SimpleSAMLAuthToken',
 
     'session.rememberme.enable' => false,
     'session.rememberme.checked' => false,
@@ -870,8 +873,8 @@ $config = array(
 
     'metadata.sources' => array(
         array('type' => 'flatfile'),
-	array('type' => 'flatfile', 'directory' => 'metadata/metafresh-dfn', 'file' => 'saml20-idp-remote.php'),
-	array('type' => 'flatfile', 'directory' => 'metadata/metafresh-eduGain', 'file' => 'saml20-idp-remote.php'),
+	    array('type' => 'flatfile', 'directory' => 'metadata/metafresh-dfn', 'file' => 'saml20-idp-remote.php'),
+	    array('type' => 'flatfile', 'directory' => 'metadata/metafresh-eduGain', 'file' => 'saml20-idp-remote.php'),
     ),
 
     'metadata.sign.enable' => false,
@@ -956,18 +959,6 @@ $config = array(
 			'sources'	=> array(
 				array(
                     'src' => 'https://www.aai.dfn.de/fileadmin/metadata/dfn-aai-basic-metadata.xml',
-					'certificates' => array(
-						'dfn-aai.g2.pem'
-					),
-					'template' => array(
-						'tags'	=> array('dfn'),
-						'authproc' => array(
-							51 => array('class' => 'core:AttributeMap', 'oid2name'),
-						),
-					),
-				),
-				array(
-                    'src' => 'https://www.aai.dfn.de/fileadmin/metadata/dfn-aai-test-metadata.xml',
 					'certificates' => array(
 						'dfn-aai.g2.pem'
 					),
@@ -1135,6 +1126,8 @@ https://google-idp.gis.bgu.tum.de/simplesaml/saml2/idp/metadata.php?output=xhtml
 
 Example:
 ```php
+<?php
+
 $metadata['https://google-idp.gis.bgu.tum.de/simplesaml/saml2/idp/metadata.php'] = array (
   'metadata-set' => 'saml20-idp-remote',
   'entityid' => 'https://google-idp.gis.bgu.tum.de/simplesaml/saml2/idp/metadata.php',
@@ -1193,6 +1186,14 @@ $metadata['https://google-idp.gis.bgu.tum.de/simplesaml/saml2/idp/metadata.php']
     ),
   ),
 );
+```
+
+To allow more memory for handling metadata, go to line 88 of file 
+``/opt/authorization-server/vendor/simplesamlphp/simplesamlphp/lib/SimpleSAML/Metadata/MetaDataStorageHandlerFlatFile.php``
+and insert the following lines:
+```php
+// Increase memory size for big metadata files
+ini_set('memory_limit', '500M');
 ```
 
 ### Apache Web Server
@@ -1274,32 +1275,75 @@ setsebool -P httpd_can_network_connect_db 1
 
 ##### Manage SSL certificates
 
-Copy the private key and certificate to the directory ``/opt/authorization-server/pki/``:
+The original certificates and private keys should be stored centrally in the directory
+``/etc/ssl/certs/``.
+Other directories should only have symbolic links to these files.
+
+**IMPORTANT**: The passphrase must be removed from the private key!
 ```bash
-cd /opt/authorization-server/pki/
-copy /etc/ssl/certs/private_key.pem ./
-copy /etc/ssl/certs/certificate.pem ./
+openssl rsa -in private_key.pem -out private_key_no_passphrase.pem
 ```
 
-Then change the owner and the group to ``apache``:
-```bash
-chown apache private_key.pem
-chown apache certificate.pem
-chgrp apache private_key.pem
-chgrp apache certificate.pem
-```
+1.  Configure ``apache``:
+    ```bash
+    vi /etc/httpd/conf.d/ssl.conf
+    ```
+    And set the following line:
+    ```bash
+    ...
+    
+    SSLCertificateKeyFile /etc/pki/tls/certs/private_key_no_passphrase.pem
+    
+    ...
+    ```
 
-Then change the permission to read-only for the owner of the private key and write-only for the owner of the certificate file:
-```bash
-chmod 400 private_key.pem
-chmod 644 certificate.pem
-```
+1.  Change the owner and group of the certificates and private keys to ``apache``:
+    ```bash
+    cd /etc/ssl/certs/
+    chown apache:apache ./private_key_no_passphrase.pem
+    chown apache:apache ./private_key.pem
+    chown apache:apache ./certificate.pem
+    chown apache:apache ./chain.pem
+    ```
 
-Then update the config file ``/opt/authorization-server/config/config.php`` accordingly:
-```php
-  'private_key' => '../pki/private_key.pem',
-  'public_key' => '../pki/certificate.pem',
-```
+    Then change the permission to read-only for the owner of the private key 
+    and write-only for the owner of the certificate file:
+    ```bash
+    chmod 400 ./private_key_no_passphrase.pem
+    chmod 400 ./private_key.pem
+    chmod 644 ./certificate.pem
+    chmod 644 ./chain.pem
+    ```
+
+1.  Create symbolic links the private key and certificate to the directory ``/opt/authorization-server/pki/``:
+    ```bash
+    cd /opt/authorization-server/pki/
+    ln -s /etc/ssl/certs/private_key_no_passphrase.pem ./
+    ln -s /etc/ssl/certs/certificate.pem ./
+    ln -s /etc/ssl/certs/chain.pem ./
+    ```
+    
+    Then update the config file ``/opt/authorization-server/config/config.php`` accordingly:
+    ```php
+      'private_key' => '../pki/private_key_no_passphrase.pem',
+      'public_key' => '../pki/certificate.pem',
+    ```
+    
+2.  Similarly, create symbolic links the private key and certificate to the directory 
+    ``/opt/authorization-server/vendor/simplesamlphp/simplesamlphp/cert/``:
+    ```bash
+    cd /opt/authorization-server/vendor/simplesamlphp/simplesamlphp/cert/
+    ln -s /etc/ssl/certs/private_key_no_passphrase.pem ./
+    ln -s /etc/ssl/certs/certificate.pem ./
+    ln -s /etc/ssl/certs/chain.pem ./
+    ```
+    
+    Then update the config file ``/opt/authorization-server/vendor/simplesamlphp/simplesamlphp/config/authsources.php`` 
+    in all SPs accordingly:
+    ```php
+    'privatekey' => 'private_key_no_passphrase.pem',
+    'certificate' => 'certificate.pem',
+    ```
 
 ##### Allow permission to write logs
 
