@@ -14,8 +14,8 @@
     
 ### Create a self-signed certificate
 
-*   The Discovery Service only needs to trust the Identity Provider,
-hence a self-signed certificate would suffice here:
+*   Prepare an SSL certificate ``google-idp_cert.pem`` and a private key ``google-idp_key.pem``.
+    Alternatively, create a self-signed certificate only for testing:
     ````bash
     cd /etc/ssl/certs
     openssl req -newkey rsa:3072 -new -x509 -days 3652 -nodes -out google-idp_cert.pem -keyout google-idp_key.pem
@@ -29,6 +29,7 @@ hence a self-signed certificate would suffice here:
     organizationalUnitName = Ingenieurfakultaet Bau Geo Umwelt
     commonName = google-idp.gis.bgu.tum.de
     ````
+    The resulting private key does not have any passphrase.
 
 *   Allow only ``root`` to have read access to the key file:
     ````bash
@@ -37,6 +38,16 @@ hence a self-signed certificate would suffice here:
 
 *   Remember to add the chain certificate ``/etc/ssl/certs/google-idp_chain.pem`` 
     as well if this certificate is not self-signed.
+    
+*   The certificates and private keys are stored in ``/etc/ssl/certs``.
+    The directory ``/etc/pki/tls/certs`` shall then automatically create symbolic links to the files in this directory.
+    
+*   Allow ``apache`` to access these files:
+    ```bash
+    chown apache:apache google-idp_cert.pem
+    chown apache:apache google-idp_key.pem
+    chown apache:apache google-idp_chain.pem
+    ```
 
 *   If ``httpd`` is unable to start, run the following command:
     ````bash
@@ -108,6 +119,11 @@ hence a self-signed certificate would suffice here:
         'timezone' => 'Europe/Berlin',
         
         'enable.saml20-idp' => true,
+        
+        'session.cookie.name' => 'SDDISessionID',
+        'session.cookie.domain' => '.gis.bgu.tum.de',
+        'session.phpsession.cookiename' => 'SimpleSAML',
+        'session.authtoken.cookiename' => 'SimpleSAMLAuthToken',
         ````
     
 ### Set up SimpleSAMLphp Identity Provider
@@ -115,6 +131,22 @@ hence a self-signed certificate would suffice here:
 1.  Go to the [Google API Console](https://console.developers.google.com/), 
     create an OAuth application. Then create credentials for an OAuth web application.
     This will give a Google client ID and a secret.
+
+1.  Since the default directory for certificates and private keys for SimpleSAMLPHP is
+    in the directory ``/var/google-idp/vendor/simplesamlphp/simplesamlphp/cert``
+    as given in the variable ``'certdir' => 'cert/''``
+    in the file ``/var/google-idp/vendor/simplesamlphp/simplesamlphp/config/config.php``:
+    + EITHER change the path to the variable ``certdir``
+    + OR create symbolic links to existing certificates and private keys in the directory
+      ``/etc/ssl/certs/``:
+    ```bash
+    cd /var/google-idp/vendor/simplesamlphp/simplesamlphp
+    mkdir cert
+    cd cert
+    ln -s /etc/ssl/certs/google-idp_cert.pem ./
+    ln -s /etc/ssl/certs/google-idp_key.pem ./
+    ln -s /etc/ssl/certs/google-idp_chain.pem ./
+    ```
 
 1.  Configure the file ``/var/google-idp/vendor/simplesamlphp/simplesamlphp/config/authsources.php`` 
     (for more information on the configuration parameters, please refer to 
@@ -128,8 +160,8 @@ hence a self-signed certificate would suffice here:
         'sign.logout' => true,
         'validate.logout' => true,
         'redirect.sign' => true,
-        'privatekey' => '/etc/pki/tls/certs/google-idp_key.pem',
-        'certificate' => '/etc/pki/tls/certs/google-idp_cert.pem',
+        'privatekey' => 'google-idp_key.pem',
+        'certificate' => 'google-idp_cert.pem',
         // *** Google Endpoints ***
         'urlAuthorize' => 'https://accounts.google.com/o/oauth2/auth',
         'urlAccessToken' => 'https://accounts.google.com/o/oauth2/token',
@@ -152,8 +184,9 @@ hence a self-signed certificate would suffice here:
 1.  Edit the following lines in the file 
     ``/var/google-idp/vendor/simplesamlphp/simplesamlphp/metadata/saml20-idp-hosted.php``
     ````php
-    'privatekey' => '/etc/pki/tls/certs/google-idp_key.pem',
-    'certificate' => '/etc/pki/tls/certs/google-idp_cert.pem',
+    // Relative to certdir given in config.php
+    'privatekey' => 'google-idp_key.pem',
+    'certificate' => 'google-idp_cert.pem',
 
     'auth' => 'google',
     
@@ -202,7 +235,7 @@ hence a self-signed certificate would suffice here:
     for more information on the attributes used here.
 
 1.  Configure the file ``/var/google-idp/vendor/simplesamlphp/simplesamlphp/metadata/saml20-sp-remote.php``
-    to trust SSDSOS1, SSDSOS2 and SSDAS
+    to trust SSDSOS1 and SSDSOS2
     ````php
     /*
      * SSDSOS1
@@ -265,38 +298,16 @@ hence a self-signed certificate would suffice here:
             ],
         ],
     ];
-    
-    /*
-     * SSDAS
-     */
-    $metadata['https://ssdas.gis.bgu.tum.de/shibboleth'] = [
-        'entityid' => 'https://ssdas.gis.bgu.tum.de/shibboleth',
-        'contacts' => [],
-        'metadata-set' => 'saml20-sp-remote',
-        'AssertionConsumerService' => [
-            0 => [
-                'Binding' => 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST',
-                'Location' => 'https://ssdas.gis.bgu.tum.de/Shibboleth.sso/SAML2/POST',
-                'index' => 1,
-            ],
-            1 => [
-                'Binding' => 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST-SimpleSign',
-                'Location' => 'https://ssdas.gis.bgu.tum.de/Shibboleth.sso/SAML2/POST-SimpleSign',
-                'index' => 2,
-            ],
-            2 => [
-                'Binding' => 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact',
-                'Location' => 'https://ssdas.gis.bgu.tum.de/Shibboleth.sso/SAML2/Artifact',
-                'index' => 3,
-            ],
-            3 => [
-                'Binding' => 'urn:oasis:names:tc:SAML:2.0:bindings:PAOS',
-                'Location' => 'https://ssdas.gis.bgu.tum.de/Shibboleth.sso/SAML2/ECP',
-                'index' => 4,
-            ],
-        ],
-    ];
     ````
+    
+1.  Further append the metadata (flat-file format) of the following SPs from the Authorization Server to the file 
+    ``/var/google-idp/vendor/simplesamlphp/simplesamlphp/metadata/saml20-sp-remote.php``:
+    
+    https://ssdas.gis.bgu.tum.de/simplesaml/module.php/saml/sp/metadata.php/oauth?output=xhtml
+    
+    https://ssdas.gis.bgu.tum.de/simplesaml/module.php/saml/sp/metadata.php/oidc-profile?output=xhtml
+    
+    https://ssdas.gis.bgu.tum.de/simplesaml/module.php/saml/sp/metadata.php/openid?output=xhtml
     
 1.  Delete all the examples in ``/var/google-idp/vendor/simplesamlphp/simplesamlphp/saml20-sp-remote.php``.
 
