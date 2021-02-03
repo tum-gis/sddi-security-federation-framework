@@ -732,15 +732,15 @@ $config = array(
     'datadir' => 'data/',
     'tempdir' => '/tmp/simplesaml',
 
-    'technicalcontact_name' => '<Your Name>',
-    'technicalcontact_email' => '<Your Email>',
+    'technicalcontact_name' => '<NAME>',
+    'technicalcontact_email' => '<EMAIL>',
 
     'timezone' => 'Europe/Berlin',
 
     # Run tr -c -d '0123456789abcdefghijklmnopqrstuvwxyz' </dev/urandom | dd bs=32 count=1 2>/dev/null;echo
     'secretsalt' => 'randombytesinsertedhere',
 
-    'auth.adminpassword' => 'ThisIsSecure',
+    'auth.adminpassword' => '<ADMIN_PASSWORD>',
 
     'admin.protectindexpage' => false,
     'admin.protectmetadata' => false,
@@ -955,10 +955,24 @@ THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR I
 $config = array(
 	'sets' => array(
 		'dfn' => array(
-			'cron'		=> array('daily'),
-			'sources'	=> array(
+		    'cron' => array('daily'),
+		    'sources' => array(
+		        // Metadata containing SPs such as oauth, oidc-profile and openid in ssdas.gis.bgu.tum.de
 				array(
                     'src' => 'https://www.aai.dfn.de/fileadmin/metadata/dfn-aai-basic-metadata.xml',
+					'certificates' => array(
+						'dfn-aai.g2.pem'
+					),
+					'template' => array(
+						'tags'	=> array('dfn'),
+						'authproc' => array(
+							51 => array('class' => 'core:AttributeMap', 'oid2name'),
+						),
+					),
+				),
+				// Metadata containing SOS1 and SOS2
+				array(
+                    'src' => 'https://www.aai.dfn.de/fileadmin/metadata/dfn-aai-metadata.xml',
 					'certificates' => array(
 						'dfn-aai.g2.pem'
 					),
@@ -982,6 +996,7 @@ $config = array(
         'eduGain' => array(
             'cron' => array('daily'),
             'sources' => array(
+                // Metadata containing TUM IdP
                 array(
                     'src' => 'https://www.aai.dfn.de/fileadmin/metadata/dfn-aai-edugain+idp-metadata.xml',
                     'template' => array(
