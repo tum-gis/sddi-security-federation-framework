@@ -94,12 +94,16 @@ In order to compile the list of IdPs, you need to download the following SAML2 m
   The URL is displayed in the SimpleSAMLphp GUI: 
   ````bash
   cd /opt/discovery-service
-  curl -k https://google-idp.gis.bgu.tum.de/simplesaml/saml2/idp/metadata.php -o google-idp-metadata.xml 
+  curl https://google-idp.gis.bgu.tum.de/simplesaml/saml2/idp/metadata.php -o google-idp-metadata.xml 
   ````
 * eduGain: You can download the following files from the DFN repository: 
   ````bash
   cd /opt/discovery-service
+  # Metadata containing SPs such as oauth, oidc-profile and openid in ssdas.gis.bgu.tum.de
   curl http://www.aai.dfn.de/fileadmin/metadata/dfn-aai-basic-metadata.xml -o dfn-aai-basic-metadata.xml
+  # Metadata containing SOS1 and SOS2
+  curl http://www.aai.dfn.de/fileadmin/metadata/dfn-aai-metadata.xml -o dfn-aai-metadata.xml
+  # Metadata containing TUM IdP
   curl https://www.aai.dfn.de/fileadmin/metadata/dfn-aai-edugain+idp-metadata.xml -o dfn-aai-edugain+idp-metadata.xml
   ````
   If the name of these metadata files were changed, 
