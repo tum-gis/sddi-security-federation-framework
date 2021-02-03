@@ -40,7 +40,7 @@ package SD::ShibAuthzHandler;
 
       $log->debug("IdP Identifier: " . $idp_identifier);
 
-      if ($idp_identifier eq 'https://google-idp.sddi.secure-dimensions.de/simplesaml/saml2/idp/metadata.php')
+      if ($idp_identifier eq 'https://google-idp.gis.bgu.tum.de/simplesaml/saml2/idp/metadata.php')
       {
         return Apache2::Const::HTTP_UNAUTHORIZED;
       }
