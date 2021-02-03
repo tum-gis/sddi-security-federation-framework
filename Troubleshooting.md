@@ -4,6 +4,8 @@
 
 [Login does not work](#login-does-not-work)
 
+[Cookie names](#cookie-names)
+
 [Failed to decrypt symmetric key: Key is missing data to perform the decryption](#failed-to-decrypt-symmetric-key-key-is-missing-data-to-perform-the-decryption)
 
 
@@ -37,6 +39,12 @@ Such directories might be:
 
     For more information please refer to [the instructions](Google-IdP/README.md#set-up-simplesamlphp-identity-provider).
 
++   For **Service Providers** like SOS1 and SOS2:
+    +   ``/etc/ssl/certs/`` (used in file ``/etc/apache2/sites-available/sos-https.conf``)
+    +   ``/etc/shibboleth/`` (used in ``/etc/shibboleth/shibboleth2.xml``)
+
+    For more information please refer to [the instructions](SP/README.md#manage-ssl-certificates).
+
 1.  Copy the certificates and private keys to the directory ``/etc/ssl/certs/``.
     
 1.  Check if the symbolic links already exist according to the above mentioned instructions for the current server.
@@ -67,6 +75,85 @@ Such directories might be:
     chmod 644 ./chain.pem
     ```
 
+1.  Update metadata:
+    +   When updating **Authorization Server**:
+        +   *Will the metadata on the web of the Authorization Server be updated as well by the admins?*
+        +   Go to the Discovery Service and repeat the [instructions](DS/README.md#preparing-the-wayf-for-the-first-use).
+        +   Copy the metadata of Authorization Server SPs (``oauth``, ``oidc-profile`` and ``openid``) (flat format):
+            https://ssdas.gis.bgu.tum.de/simplesaml/module.php/saml/sp/metadata.php/oauth?output=xhtml
+            https://ssdas.gis.bgu.tum.de/simplesaml/module.php/saml/sp/metadata.php/oidc-profile?output=xhtml
+            https://ssdas.gis.bgu.tum.de/simplesaml/module.php/saml/sp/metadata.php/openid?output=xhtml
+        +   Go to Google Idp and paste them or replace the old metadata in the file ``/var/google-idp/vendor/simplesamlphp/simplesamlphp/metadata/saml20-sp-remote.php``:
+            ```bash
+            <?php
+            
+            $metadata['https://ssdsos1.gis.bgu.tum.de/shibboleth'] = array (
+                ...
+            );
+            
+            $metadata['https://ssdsos2.gis.bgu.tum.de/shibboleth'] = array (
+                ...
+            );
+        
+            $metadata['https://ssdas.gis.bgu.tum.de/oauth'] = array (
+                ...
+            ):
+            
+            $metadata['https://ssdas.gis.bgu.tum.de/oidc-profile'] = array (
+                ...
+            ):
+            
+            $metadata['https://ssdas.gis.bgu.tum.de/openid'] = array (
+                ...
+            ):
+            
+            ```
+    
+    +   When updating **Google IdP**:
+        +   Go to https://google-idp.gis.bgu.tum.de/simplesaml/saml2/idp/metadata.php?output=xhtml and copy the metadata (flat format)
+        +   Go to Authorization Server and paste it or replace the old metadata in the file ``/opt/authorization-server/vendor/simplesamlphp/simplesamlphp/metadata/saml20-idp-remote.php``:
+            ```php
+            <?php
+            
+            $metadata['https://google-idp.gis.bgu.tum.de/simplesaml/saml2/idp/metadata.php'] = array (
+                ...
+            );
+            
+            ```
+        +   Go to Discovery Service and repeat the steps in the [documentation](DS/README.md#preparing-the-wayf-for-the-first-use).
+        
+    +   When updating **SOS1 and SOS2**:
+        +   Copy the metadata of SOS1, SOS2, Authorization Server SPs (``oauth``, ``oidc-profile`` and ``openid``) (flat format):
+            https://ssdas.gis.bgu.tum.de/simplesaml/module.php/saml/sp/metadata.php/oauth?output=xhtml
+            https://ssdas.gis.bgu.tum.de/simplesaml/module.php/saml/sp/metadata.php/oidc-profile?output=xhtml
+            https://ssdas.gis.bgu.tum.de/simplesaml/module.php/saml/sp/metadata.php/openid?output=xhtml
+
+        +   Go to Google Idp and paste them or replace the old metadata in the file ``/var/google-idp/vendor/simplesamlphp/simplesamlphp/metadata/saml20-sp-remote.php``:
+            ```bash
+            <?php
+            
+            $metadata['https://ssdsos1.gis.bgu.tum.de/shibboleth'] = array (
+                ...
+            );
+            
+            $metadata['https://ssdsos2.gis.bgu.tum.de/shibboleth'] = array (
+                ...
+            );
+        
+            $metadata['https://ssdas.gis.bgu.tum.de/oauth'] = array (
+                ...
+            ):
+            
+            $metadata['https://ssdas.gis.bgu.tum.de/oidc-profile'] = array (
+                ...
+            ):
+            
+            $metadata['https://ssdas.gis.bgu.tum.de/openid'] = array (
+                ...
+            ):
+            
+            ```
+    
 ### Login does not work 
 Error: The login cannot be done with the message such as:
 *   Incorrect cookies, deactivated cookies 
@@ -98,6 +185,18 @@ timedatectl
 # Set the hardware clock to the current system time
 hwclock -w
 ```
+
+### Cookie names
+The cookies must be shared between different participating servers and services, 
+such as the Authorization Server, the Discovery Service, the Google IdP, the SOS1 and SOS2 as well as the WFS.
+
+The demo uses the following names:
+
+| Key    | Value               |
+|--------|---------------------|
+| Domain | ``.gis.bgu.tum.de`` |
+| Prefix | ``SDDI``            |
+| Path   | ``/``               |
 
 ### Failed to decrypt symmetric key: Key is missing data to perform the decryption
 Remove the passphrase from the private key and overwrite it:
