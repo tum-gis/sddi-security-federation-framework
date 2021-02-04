@@ -83,7 +83,7 @@ The `<Else>` section defines the HTTP Cookie (Shibboleth) Session setup.
 
 The access control condition in place requires an authentication user (`ShibRequestSetting requireSession 1`).
 
-Create the file in ``/usr/local/share/perl/5.22.1/SD/OAuthnBearerHandler.pm`` 
+Create a Perl file in the Perl directory (shown in environment variables). Such as in Ubuntu, create the file ``/usr/local/share/perl/5.22.1/SD/OAuthnBearerHandler.pm`` 
 with the contents provided in [OAuthnBearerHandler.pm](SOS1/OAuthnBearerHandler.pm).
 
 #### For SOS2
@@ -143,13 +143,13 @@ The SOS2 configuration is basically identical to the SOS1 with one important dif
 </Location>
 ````
 
-Create the file in ``/usr/local/share/perl/5.22.1/SD/OAuthnBearerHandler.pm``
+Create a Perl file in the Perl directory (shown in environment variables). Such as in Ubuntu, create the file ``/usr/local/share/perl/5.22.1/SD/OAuthnBearerHandler.pm``
 with the contents provided in [OAuthnBearerHandler.pm](SOS1/OAuthnBearerHandler.pm).
 
 The actual enforcement of the access condition that only TUM users can access the SOS2 is implemented 
 in the `<Else>` section via a [PerlAuthzHandler](https://perl.apache.org/docs/2.0/user/handlers/http.html): `PerlAuthzHandler SD::ShibAuthzHandler`.
 
-Create the file in ``/usr/local/share/perl/5.22.1/SD/ShibAuthzHandler.pm``
+Create a Perl file in the Perl directory (shown in environment variables). Such as in Ubuntu, create the file ``/usr/local/share/perl/5.22.1/SD/ShibAuthzHandler.pm``
 with the contents provided in [ShibAuthzHandler.pm](SOS2/ShibAuthzHandler.pm). 
 Make sure to edit line 43:
 ````perl5
@@ -256,6 +256,3 @@ curl https://www.aai.dfn.de/fileadmin/metadata/dfn-aai.g2.pem -o dfn-aai.g2.pem
 <!-- Certificates. -->
 <CredentialResolver type="File" key="private_key_no_passphrase.pem" certificate="certificate.pem"/>
 ```
-
-### ShibAuthzHandler
-The file `ShibAuthzHandler.pm` can be found in the `SP` directory.
