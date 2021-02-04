@@ -907,15 +907,20 @@ the authorization server must also be registered in the DFN-AAI federation.
 In order to achieve this, some metadata are required, see [instructions](https://doku.lrz.de/x/G4RkAw).
 
 The metadata of the SPs can be found using the following URLs:
+
 [https://<AUTHORIZATION_SERVER>/simplesaml/module.php/saml/sp/metadata.php/oauth](https://<AUTHORIZATION_SERVER>/simplesaml/module.php/saml/sp/metadata.php/oauth)
 [https://<AUTHORIZATION_SERVER>/simplesaml/module.php/saml/sp/metadata.php/oidc-profile](https://<AUTHORIZATION_SERVER>/simplesaml/module.php/saml/sp/metadata.php/oidc-profile)
 [https://<AUTHORIZATION_SERVER>/simplesaml/module.php/saml/sp/metadata.php/openid](https://<AUTHORIZATION_SERVER>/simplesaml/module.php/saml/sp/metadata.php/openid)
 
 When registering the SP instances with the Coordination Center, it is important to keep in mind 
-that the configuration of the two instances differ regarding the request of user attributes: 
+that the configuration of the three instances differ regarding the request of user attributes: 
 The `oauth` instance must be configured to not force the IdP to release user attributes 
-and the `openid` instance must be configured to request a unique user identifier plus attributes 
-to fill the openid claims for the scopes `email` and `profile`.
+and the `oidc-profile` and the `openid` instance must be configured to request a unique user identifier plus attributes 
+to fill the (openid) claims for the scopes `email` and `profile`.
+
+Note that even if the SPs have been registered in the DFN AAI and eduGAIN federation, 
+the participating institutions do not give access to personal information (such as first and last name) automatically.
+**This must be requested to every participating institution**.
 
 #### Fetching Federation Metadata
 Once the SPs are registered, the SPs must fetch the metadata of the IdPs that are trusted for login. 
