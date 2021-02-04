@@ -157,24 +157,24 @@
         'authoauth2:OAuth2',
         'template' => 'GoogleOIDC',
         // *** Certs ***
-        'sign.logout' => true,
-        'validate.logout' => true,
-        'redirect.sign' => true,
-        'privatekey' => 'google-idp_key.pem',
-        'certificate' => 'google-idp_cert.pem',
+        //'sign.logout' => true,
+        //'validate.logout' => true,
+        //'redirect.sign' => true,
+        //'privatekey' => 'google-idp_key.pem',
+        //'certificate' => 'google-idp_cert.pem',
         // *** Google Endpoints ***
-        'urlAuthorize' => 'https://accounts.google.com/o/oauth2/auth',
-        'urlAccessToken' => 'https://accounts.google.com/o/oauth2/token',
-        'urlResourceOwnerDetails' => 'https://www.googleapis.com/oauth2/v3/userinfo',
+        //'urlAuthorize' => 'https://accounts.google.com/o/oauth2/auth',
+        //'urlAccessToken' => 'https://accounts.google.com/o/oauth2/token',
+        //'urlResourceOwnerDetails' => 'https://www.googleapis.com/oauth2/v3/userinfo',
         // *** My application ***
         'clientId' => 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com',
         'clientSecret' => 'YOUR_GOOGLE_SECRET',
-        'scopes' =>  [
-            'openid',
-            'email',
-            'profile'
-        ],
-        'scopeSeparator' => ' ',
+        //'scopes' =>  [
+        //    'openid',
+        //    'email',
+        //    'profile'
+        //],
+        //'scopeSeparator' => ' ',
     ],
     ````
     
@@ -327,3 +327,89 @@
     ````bash
     systemctl restart httpd
     ````
+    
+### Configure claims in response from Google
+
+The response from Google after a successful login using ``'template' => 'GoogleOIDC'`` 
+mentioned [above](#set-up-simplesamlphp-identity-provider) contain claims such as 
+``sub``, ``name``, ``family_name``, ``given_name``, etc. 
+(see [documentation](https://developers.google.com/identity/protocols/oauth2/openid-connect#obtainuserinfo)).
+These must be transformed so that the Authorization Server can make sense of.
+    
+1.  Go to ``/var/google-idp/vendor/simplesamlphp/simplesamlphp/metadata/saml-idp-hosted.php`` and add the following element:
+    ```php
+    'authproc' => [
+        // Convert oidc names to ldap friendly names
+        90 => ['class' => 'core:AttributeMap',  'authoauth2:oidc2name'],
+        95 => [
+            'class' => 'core:AttributeMap',
+            'oidc.picture' => 'picture',
+            'oidc.email_verified' => 'emailVerified',
+            'oidc.locale' => 'locale',
+        ],
+    ],
+    ```
+    This changes the attribute names (as identified by the class ``'core:AttributeMap'``) contained in the Google response to those compatible with the Authorization Server,
+as listed in lines [133-160](../AS/authorization-server/www/as.php) of ``as.php``.
+    The file [oidc2name](https://github.com/cirrusidentity/simplesamlphp-module-authoauth2/blob/master/attributemap/oidc2name.php)
+contains a pre-defined set of mapping rules according to the [OpenID Connect specs](https://openid.net/specs/openid-connect-core-1_0.html#Claims). 
+    This is further appended by additional four rules as shown above. 
+    The number ``90`` and ``95`` indicate the priority, in which the rules are executed: smaller priorities first.
+    This means that the pre-defined rules in ``oidc2name`` shall be executed first.
+    
+    For more information on the ``core:AttributeMap``, please refer to the [documentation](https://simplesamlphp.org/docs/stable/core:authproc_attributemap).
+    It is also possible to not only change attribute names, but also insert, delete, etc. them, 
+    please refer to the classes listed in the [documentation](https://simplesamlphp.org/docs/stable/simplesamlphp-authproc#section_2).
+    
+1.  Note that existing rules with smaller priority number that affect the same attributes might interfere with the rules executed afterwards.
+    For this reason, it is recommended to **remove** the following elements in ``/var/google-idp/vendor/simplesamlphp/simplesamlphp/config/config.php``:
+    +   ``'authproc.idp' => [ ... ],``
+    +   ``'authproc.sp' => [ ... ],``
+    
+1.  To test the new response, go to
+    
+    https://ssdas.gis.bgu.tum.de/simplesaml/module.php/core/authenticate.php?as=openid
+
+    and login using a Google account. The following results should be shown:
+
+    ```json
+    "Attributes": {
+        "uid": [
+            "123456748912345678912"
+        ],
+        "cn": [
+            "Son N"
+        ],
+        "givenName": [
+            "Son"
+        ],
+        "sn": [
+            "N"
+        ],
+        "picture": [
+            "https://example.com/picture"
+        ],
+        "mail": [
+            "example@gmail.com"
+        ],
+        "emailVerified": [
+            "true"
+        ],
+        "locale": [
+            "en"
+        ]
+    },
+    ```
+
+The attribute names from/accepted by different sources are summarized as follows:
+
+| **Google response** | **Template ``GoogleOIDC``** | **Authorization server** |
+|---------------------|-----------------------------|--------------------------|
+| ``sub`` | ``oidc.sub`` | ``uid`` |
+| ``name`` | ``oidc.name`` | ``cn`` |
+| ``given_name`` | ``oidc.given_name`` | ``givenName`` |
+| ``family_name`` | ``oidc.family_name`` | ``sn`` |
+| ``picture`` | ``oidc.picture`` | ``picture`` |
+| ``email`` | ``oidc.email`` | ``mail`` |
+| ``email_verified`` | ``oidc.email_verified`` | ``emailVerified`` |
+| ``locale`` | ``oidc.locale`` | ``locale`` |
