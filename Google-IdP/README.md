@@ -76,6 +76,10 @@
     
             Alias /simplesaml /var/google-idp/vendor/simplesamlphp/simplesamlphp/www
         
+            RewriteEngine on
+            RewriteCond %{REQUEST_URI} ^/$
+            RewriteRule (.*) /simplesaml [R=301]
+        
             SSLCertificateFile /etc/pki/tls/certs/google-idp_cert.pem
             SSLCertificateKeyFile /etc/pki/tls/certs/google-idp_key.pem
             SSLCertificateChainFile /etc/pki/tls/certs/google-idp_chain.pem
@@ -413,3 +417,13 @@ The attribute names from/accepted by different sources are summarized as follows
 | ``email`` | ``oidc.email`` | ``mail`` |
 | ``email_verified`` | ``oidc.email_verified`` | ``emailVerified`` |
 | ``locale`` | ``oidc.locale`` | ``locale`` |
+
+### IMPORTANT NOTE
+
+Google sends by default access to some personal information such as ``namme``, ``given_name``, ``family_name``, ``picture``, ``email``, etc.
+and this happens without involving the Authorization Server.
+In other words, the Google response is currently the same for all three SPs of the Authorization Server (``oauth``, ``oidc-profile``, ``openid``).
+
+One future work is to investigate if it is possible to develop different Attribute Release Filters for each type 
+of the SPs ``oauth``, ``oidc-profile``, ``openid`` in order to make the responses conform to the EU GDPR. 
+The next step is to develop or employ a GoogleAuth Adapter for each of the above-mentioned SP.
