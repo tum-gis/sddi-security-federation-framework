@@ -106,7 +106,7 @@ restorecon -RvF /etc/ssl/certs/
 The deployment of the `OAuthnBearerHandler` hanlder requires to install `mod_perl` and dependency packages: 
 
 ```bash
-yum -y install mod_perl perl-libapreq2 perl-libwww-perl perl-JSON perl-LWP-Protocol-https perl-Crypt-SSLeay
+yum -y install epel-release mod_perl mod_perl-devel perl-libapreq2 perl-libwww-perl perl-JSON perl-LWP-Protocol-https perl-Crypt-SSLeay
 ```
 
 
@@ -256,6 +256,315 @@ The following link shall be redirected to SSL Tomcat automatically:
 
 https://ssdwfs.gis.bgu.tum.de/
 
+### Install and initiate PostgreSQL with PostGIS
+
+#### Install PostgreSQL 9.5 and PostGIS
+
+The following steps are summarized from 
+[this tutorial](https://www.postgresonline.com/journal/archives/362-An-almost-idiots-guide-to-install-PostgreSQL-9.5,-PostGIS-2.2-and-pgRouting-2.1.0-with-Yum.html).
+
+Check system version:
+```bash
+uname -a
+cat /etc/redhat-release
+```
+
+Install ``rpm`` for CentOS ``x86_64``:
+```bash
+rpm -ivh https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+```
+
+List all packages from ``pgdg95``:
+```bash
+sudo yum list | grep pgdg95
+```
+
+Install PostgreSQL 9.5:
+```bash
+yum install postgresql95 postgresql95-server postgresql95-libs postgresql95-contrib postgresql95-devel
+```
+
+Change password of the user ``postgres``:
+```bash
+psql -U postgres
+ALTER USER postgres with password '<PASSWORD>';
+```
+
+Run the service on boot:
+```bash
+su root
+service postgresql-9.5 initdb
+```
+
+If the following error appears:
+
+``The service command supports only basic LSB actions (start, stop, restart, try-restart, reload, force-reload, status). 
+For other actions, please try to use systemctl.``
+
+Execute:
+```bash
+/usr/pgsql-9.5/bin/postgresql95-setup initdb
+```
+
+Then:
+```bash
+service postgresql-9.5 start
+# List of services
+chkconfig --list
+# Or in CentOS 7+:
+systemctl list-unit-files
+# Start postgresql on boot
+chkconfig postgresql-9.5 on
+```
+
+Install ``adminpack``:
+```bash
+su postgres
+cd ~/
+/usr/pgsql-9.5/bin/psql -p 5432 -c "CREATE EXTENSION adminpack;"
+```
+
+Install PostGIS binaries:
+```bash
+yum -y install epel-release
+yum install postgis2_95 postgis2_95-client
+```
+
+Install ``ogrfdw``:
+```bash
+yum install ogr_fdw95
+```
+
+#### Initiate database
+
+In this scenario, an old existing database shall be copied to a new one.
+
+Locate ``pg_hba.conf``:
+```bash
+locate pg_hba.conf
+# Ubuntu: /etc/postgresql/9.5/main/pg_hba.conf
+# CentOS: /var/lib/pgsql/9.5/data/pg_hba.conf
+```
+
+Edit the file ``pg_hba.conf`` (do this for both servers that host the old and new database):
+Change the line
+```
+# Ubuntu
+local all postgres peer
+# CentOS
+local all all peer
+```
+to
+```
+# Ubuntu
+local all postgres md5
+# CentOS
+local all all md5
+```
+
+Restart PostgreSQL:
+```
+# Ubuntu
+service postgresql restart
+# CentOS
+systemctl restart postgresql-9.5
+```
+
+Export the entire old database from the ***old server*** to a file:
+```sql
+pg_dump -U postgres -d <DATABASE> -f <FILENAME>.sql
+```
+
+Copy the created file to the ***new server***:
+```bash
+# Execute this line in the new server
+scp <SSH_USER>@<IP_ADDRESS_OF_OLD_SERVER>:<PATH>/<FILENAME>.sql
+```
+
+Create a new database on the ***new server***:
+```sql
+CREATE DATABASE <NEW_DB>;
+\connect <NEW_DB>;
+CREATE EXTENSION postgis;
+CREATE EXTENSION postgis_topology;
+```
+
+Check version:
+```sql
+SELECT postgis_full_version();
+```
+
+Allow database to connect to the web in SELinux:
+```bash
+setsebool -P httpd_can_network_connect_db=1
+```
+
+Restore the exported database on the ***new server***:
+```bash
+psql -U postgres -d <NEW_DB> -f <FILENAME>.sql
+```
+
+
+### Add WFS plugin to Tomcat
+
+Copy the ``.war`` file, such as:
+```bash
+cp citydb-wfs-qeop.war /opt/tomcat/latest/webapps
+chown tomcat:tomcat citydb-wfs-qeop.war
+```
+
+Then restart Tomcat:
+```bash
+systemctl restart tomcat
+```
+
+Configure the file ``/opt/tomcat/latest/webapps/citydb-wfs-qeop/config.xml``:
+```bash
+chown tomcat:tomcat /opt/tomcat/latest/webapps/citydb-wfs-qeop/config.xml
+```
+
+```xml
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<wfs xmlns="http://www.3dcitydb.org/importer-exporter/config"
+  xmlns:ows="http://www.opengis.net/ows/1.1" xmlns:xlink="http://www.w3.org/1999/xlink"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.3dcitydb.org/importer-exporter/config schemas/config/config.xsd">
+  <capabilities>
+    <owsMetadata>
+      <ows:ServiceIdentification>
+        <ows:Title>virtualcityDATABASE Web Feature Service</ows:Title>
+        <ows:ServiceType>WFS</ows:ServiceType>
+        <ows:ServiceTypeVersion>2.0.2</ows:ServiceTypeVersion>
+        <ows:ServiceTypeVersion>2.0.0</ows:ServiceTypeVersion>
+      </ows:ServiceIdentification>
+      <ows:ServiceProvider>
+        <ows:ProviderName/>
+        <ows:ServiceContact/>
+      </ows:ServiceProvider>
+    </owsMetadata>
+  </capabilities>
+  <featureTypes>
+    <featureType>
+      <name>Building</name>
+      <ows:WGS84BoundingBox>
+        <ows:LowerCorner>-180 -90</ows:LowerCorner>
+        <ows:UpperCorner>180 90</ows:UpperCorner>
+      </ows:WGS84BoundingBox>
+    </featureType>
+    <featureType>
+      <name>Road</name>
+      <ows:WGS84BoundingBox>
+        <ows:LowerCorner>-180 -90</ows:LowerCorner>
+        <ows:UpperCorner>180 90</ows:UpperCorner>
+      </ows:WGS84BoundingBox>
+    </featureType>
+    <version isDefault="true">2.0</version>
+    <version>1.0</version>
+  </featureTypes>
+  <operations>
+    <requestEncoding>
+      <method>KVP+XML</method>
+      <useXMLValidation>true</useXMLValidation>
+    </requestEncoding>
+    <constraints>
+      <supportAdHocQueries>true</supportAdHocQueries>
+    </constraints>
+    <GetPropertyValue isEnabled="true">
+      <outputFormat>application/gml+xml; version=3.1</outputFormat>
+      <outputFormat>GML3.1+GZIP</outputFormat>
+      <useCityDBADE>false</useCityDBADE>
+    </GetPropertyValue>
+    <GetFeature>
+      <outputFormat>application/gml+xml; version=3.1</outputFormat>
+      <outputFormat>GML3.1+GZIP</outputFormat>
+      <useCityDBADE>false</useCityDBADE>
+    </GetFeature>
+    <ManageStoredQueries isEnabled="true"/>
+    <Transaction isEnabled="true">
+      <Insert>
+        <inputFormat>application/gml+xml; version=3.1</inputFormat>
+        <importAppearances>true</importAppearances>
+      </Insert>
+      <Update>
+        <inputFormat>application/gml+xml; version=3.1</inputFormat>
+      </Update>
+      <nativeActions>
+        <InsertComplexProperty isEnabled="true"/>
+      </nativeActions>
+    </Transaction>
+  </operations>
+  <filterCapabilities>
+    <scalarCapabilities>
+      <logicalOperators>true</logicalOperators>
+      <comparisonOperators>
+        <operator>PropertyIsEqualTo</operator>
+        <operator>PropertyIsNotEqualTo</operator>
+        <operator>PropertyIsLessThan</operator>
+        <operator>PropertyIsGreaterThan</operator>
+        <operator>PropertyIsLessThanOrEqualTo</operator>
+        <operator>PropertyIsGreaterThanOrEqualTo</operator>
+        <operator>PropertyIsLike</operator>
+        <operator>PropertyIsNull</operator>
+        <operator>PropertyIsNil</operator>
+        <operator>PropertyIsBetween</operator>
+      </comparisonOperators>
+    </scalarCapabilities>
+    <spatialCapabilities>
+      <operator>BBOX</operator>
+      <operator>Equals</operator>
+      <operator>Disjoint</operator>
+      <operator>Touches</operator>
+      <operator>Within</operator>
+      <operator>Overlaps</operator>
+      <operator>Intersects</operator>
+      <operator>Contains</operator>
+      <operator>DWithin</operator>
+      <operator>Beyond</operator>
+    </spatialCapabilities>
+  </filterCapabilities>
+  <appearance doExport="false">
+    <textureCache isActive="false"/>
+  </appearance>
+  <database>
+    <referenceSystems>
+      <referenceSystem id="WGS84">
+        <srid>4326</srid>
+        <gmlSrsName>http://www.opengis.net/def/crs/epsg/0/4326</gmlSrsName>
+        <description>WGS 84</description>
+      </referenceSystem>
+    </referenceSystems>
+    <connection 
+      initialSize="10" 
+      maxActive="100" 
+      maxIdle="50" 
+      minIdle="0" 
+      suspectTimeout="60"
+      timeBetweenEvictionRunsMillis="30000" 
+      minEvictableIdleTimeMillis="60000">
+      <description/>
+      <type>PostGIS</type>
+      <server>localhost</server>
+      <port>5432</port>
+      <sid><DATABASE></sid>
+      <user><USER></user>
+      <password><PASSWORD></password>
+    </connection>
+  </database>
+  <server>
+    <externalServiceURL>https://ssdwfs.gis.bgu.tum.de/citydb-wfs-qeop</externalServiceURL>
+    <maxParallelRequests>30</maxParallelRequests>
+    <waitTimeout>60</waitTimeout>
+    <enableCORS>false</enableCORS>
+  </server>
+  <uidCache>
+    <mode>database</mode>
+  </uidCache>
+  <logging>
+    <file logLevel="info"/>
+  </logging>
+</wfs>
+```
+
 ## Apache Web Server Configuration
 
 Configurations for HTTP:
@@ -270,19 +579,11 @@ Configurations for HTTP:
 
     ErrorLog /var/log/httpd/redirect.error.log
     LogLevel warn
-    
-    // NEW
-    ProxyPass / ajp://localhost:8009/
-    ProxyPassReverse / ajp://localhost:8009/
-    <Proxy ajp://localhost:8009>
-            ProxyPreserveHost On
-            Require all granted
-    </Proxy>
 </VirtualHost>
 ```
 
 Configurations for HTTPS:
-```
+```xml
 <VirtualHost *:443>
     ServerName ssdwfs.gis.bgu.tum.de
     DocumentRoot /var/www/html
@@ -297,47 +598,45 @@ Configurations for HTTPS:
     SSLCertificateKeyFile /etc/pki/tls/private/<CERT>
     SSLCertificateChainFile /etc/pki/tls/certs/<CHAIN>
 
-    // NEW
-    JKMount /* ajp13_worker
+    # If the WFS is hosted on the same server, otherwise change localhost to the IP address of the WFS host
+    ProxyPass /citydb-wfs-qeop/wfs http://localhost/citydb-wfs-qeop/wfs retry=5
+    <Proxy http://localhost>
+        <Limit OPTIONS>
+            SetEnvIf Origin (.+) ORIGIN=$1
+            Header always set Access-Control-Allow-Origin "%{ORIGIN}e" env=ORIGIN
+            Header always set Access-Control-Allow-Credentials true
     
-# 129.187.38.211 is the public IP address of ssdwfs.gis.bgu.tum.de
-ProxyPass /citydb-wfs-qeop/wfs http://129.187.38.211/citydb-wfs-qeop/wfs retry=5
-<Proxy http://129.187.38.211>
-    <Limit OPTIONS>
-        SetEnvIf Origin (.+) ORIGIN=$1
-        Header always set Access-Control-Allow-Origin "%{ORIGIN}e" env=ORIGIN
-        Header always set Access-Control-Allow-Credentials true
+            SetEnvIf Access-Control-Request-Method (.+) METHOD=$1
+    
+            Header always set Access-Control-Allow-Headers "authorization"
+            Header always set Access-Control-Allow-Methods "%{METHOD}e" env=METHOD
+            #Header always set Access-Control-Max-Age "600"
+            RewriteEngine On
+            RewriteCond %{REQUEST_METHOD} OPTIONS
+            RewriteRule ^(.*)$ $1 [R=200,END]
+            Require all granted
+        </Limit>
+    
+        AuthType Bearer
+        AuthName "SSDI Security Demo"
+        Require valid-user
+        PerlAuthenHandler SD::OAuthnBearerHandler
+        PerlOptions +ParseHeaders +SetupEnv +GlobalRequest
+        PerlSetVar ClientId <CLIENT_ID>
+        PerlSetVar ClientSecret <CLIENT_SECRET>
+        PerlSetVar ValidateURL https://ssdas.gis.bgu.tum.de/oauth/tokeninfo
+    </Proxy>
 
-        SetEnvIf Access-Control-Request-Method (.+) METHOD=$1
-
-        Header always set Access-Control-Allow-Headers "authorization"
-        Header always set Access-Control-Allow-Methods "%{METHOD}e" env=METHOD
-        #Header always set Access-Control-Max-Age "600"
-        RewriteEngine On
-        RewriteCond %{REQUEST_METHOD} OPTIONS
-        RewriteRule ^(.*)$ $1 [R=200,END]
+    # If the WFS is hosted on the same server, otherwise change localhost to the IP address of the WFS host
+    ProxyPass /citydb-wfs-qeop/wfsx http://localhost/citydb-wfs-qeop/wfs retry=5
+    
+    <Directory "/var/www/html">
         Require all granted
-    </Limit>
-
-    AuthType Bearer
-    AuthName "SSDI Security Demo"
-    Require valid-user
-    PerlAuthenHandler SD::OAuthnBearerHandler
-    PerlOptions +ParseHeaders +SetupEnv +GlobalRequest
-    PerlSetVar ClientId <CLIENT_ID>
-    PerlSetVar ClientSecret <CLIENT_SECRET>
-    PerlSetVar ValidateURL https://ssdas.gis.bgu.tum.de/oauth/tokeninfo
-</Proxy>
-
-ProxyPass /citydb-wfs-qeop/wfsx http://129.187.38.211/citydb-wfs-qeop/wfs retry=5
-
-<Directory "/var/www/html">
-    Require all granted
-</Directory>
-
-Alias /TermsOfUse /var/www/html/TermsOfUse.html
-Alias /PrivacyStatement /var/www/html/PrivacyStatement.html
-Alias /CookieStatement /var/www/html/CookieStatement.html
+    </Directory>
+    
+    Alias /TermsOfUse /var/www/html/TermsOfUse.html
+    Alias /PrivacyStatement /var/www/html/PrivacyStatement.html
+    Alias /CookieStatement /var/www/html/CookieStatement.html
 </VirtualHost>
 ```
 
