@@ -635,6 +635,7 @@ to get the ``<CLIENT_ID>`` and ``<CLIENT_SECRET>``):
     
     <Directory "/var/www/html">
         Require all granted
+        Header set Access-Control-Allow-Origin "https://www.3dcitydb.org"
     </Directory>
     
     Alias /TermsOfUse /var/www/html/TermsOfUse.html
