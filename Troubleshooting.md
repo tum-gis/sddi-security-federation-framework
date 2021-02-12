@@ -1,5 +1,7 @@
 # Troubleshooting
 
+[Create/Update Client ID, Client Secret and Redirect URL](#createupdate-client-id-client-secret-and-redirect-url)
+
 [Update SSL certificates](#update-ssl-certificates)
 
 [Login does not work](#login-does-not-work)
@@ -8,6 +10,45 @@
 
 [Failed to decrypt symmetric key: Key is missing data to perform the decryption](#failed-to-decrypt-symmetric-key-key-is-missing-data-to-perform-the-decryption)
 
+### Create/Update Client ID, Client Secret and Redirect URL
+
+#### Create new
+
+Open:
+
+https://ssdas.gis.bgu.tum.de/registerapps
+
+Create the following types of applications:
+
+| Application type | Scopes |
+|---|---|
+| Client-side web application | Cryptoname, Profile, Email, SAML |
+| Web service | Cryptoname, SAML |
+
+The first application is used for the web client and shall have a client ID and a redirect URL.
+
+The second application is used for the communication between SP (SSDSOS1 and SSDSOS2) with the RS (SSDWFS) 
+and shall have a client ID and a client secret.
+
+A list of all registered applications can be shown using:
+
+https://ssdas.gis.bgu.tum.de/listapps
+
+Copy the Client ID, Client Secret and Redirect URL to:
++   [SSDSOS1 and SSDSOS2](SP)
+
+#### Update registered applications
+
+Registering a new application using the same login and an existing application name 
+will replace the registered application with this name.
+
+Registering a new application using the same login and the same existing application name 
+with a different version value shall update the corresponding registered application.
+
+#### Update client ID, client secret and redirect URL
+
+Simply replace these values in the [SP](SP) and [RS](RS) 
+as well as in the [web application](Web%20Client).
 
 ### Update SSL certificates
 Normally the certificates and private keys are stored in the directory ``/etc/ssl/certs/``.
