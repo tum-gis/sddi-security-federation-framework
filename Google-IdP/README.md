@@ -345,6 +345,25 @@ These must be transformed so that the Authorization Server can make sense of.
     'authproc' => [
         // Convert oidc names to ldap friendly names
         90 => ['class' => 'core:AttributeMap',  'authoauth2:oidc2name'],
+        // Create an additional attribute subject-id that has the same value as uid
+        92 => array(
+            'class' => 'core:AttributeCopy',
+            'uid' => 'subject-id',
+        ),
+        // Change value true and false to 1 and 0
+        93 => [
+            'class' => 'core:AttributeAlter',
+            'subject' => 'oidc.email_verified',
+            'pattern' => '/true/',
+            'replacement' => '1',
+        ],
+        94 => [
+            'class' => 'core:AttributeAlter',
+            'subject' => 'oidc.email_verified',
+            'pattern' => '/false/',
+            'replacement' => '0',
+        ],
+        // Rename attributes for compatibility with the Authorization Server (see as.php)
         95 => [
             'class' => 'core:AttributeMap',
             'oidc.picture' => 'picture',
