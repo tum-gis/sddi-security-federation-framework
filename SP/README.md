@@ -30,6 +30,10 @@ The `<Elseif "%{ENV:REDIRECT_REWRITTEN} =~ /1/">` is required to ensure non-redi
 
 The `<Else>` section defines the HTTP Cookie (Shibboleth) Session setup.
 
+Please refer to the 
+[web service registration](../Troubleshooting.md#createupdate-client-id-client-secret-and-redirect-url)
+to get the ``<CLIENT_ID>`` and ``<CLIENT_SECRET>``.
+
 ````
 <Location /weather-sensors-sos-webapp/service>
     Header always set Cache-Control "private, no-cache, no-store, proxy-revalidate, no-transform
