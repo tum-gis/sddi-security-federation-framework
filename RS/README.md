@@ -582,7 +582,10 @@ Configurations for HTTP:
 </VirtualHost>
 ```
 
-Configurations for HTTPS:
+Configurations for HTTPS 
+(please refer to the
+[web service registration](../Troubleshooting.md#createupdate-client-id-client-secret-and-redirect-url)
+to get the ``<CLIENT_ID>`` and ``<CLIENT_SECRET>``):
 ```xml
 <VirtualHost *:443>
     ServerName ssdwfs.gis.bgu.tum.de
@@ -639,7 +642,6 @@ Configurations for HTTPS:
     Alias /CookieStatement /var/www/html/CookieStatement.html
 </VirtualHost>
 ```
-
 
 The activation of the `OAuthnBearerHandler` and its configuration can take place in the Apache configuration file:
 ```
