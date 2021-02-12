@@ -83,6 +83,17 @@ to get the ``<CLIENT_ID>`` and ``<CLIENT_SECRET>``.
 	    #Require all granted
     </Else>
 </Location>
+
+<Location /weather-sensors-sos-webapp/static>
+        AuthType shibboleth
+        ShibRequestSetting requireSession 1
+        Require shib-attr homeOrganization TUM SECD
+        Header always set Cache-Control "private, no-cache, no-store, proxy-revalidate, no-transform"
+        Header always set Pragma "no-cache"
+        Require shib-session
+</Location>
+
+Alias /shibboleth-sp/main.css /usr/share/shibboleth/main.css
 ````
 
 The access control condition in place requires an authentication user (`ShibRequestSetting requireSession 1`).
@@ -93,7 +104,7 @@ with the contents provided in [OAuthnBearerHandler.pm](SOS1/OAuthnBearerHandler.
 #### For SOS2
 The SOS2 configuration is basically identical to the SOS1 with one important difference: The access control condition requires TUM users!
 
-````
+```
 <Location /smart-meters-sos-webapp/service>
     Header always set Cache-Control "private, no-cache, no-store, proxy-revalidate, no-transform
     Header always set Pragma "no-cache"
@@ -145,7 +156,38 @@ The SOS2 configuration is basically identical to the SOS1 with one important dif
         PerlOptions +ParseHeaders +SetupEnv +GlobalRequest
 	</Else>
 </Location>
-````
+
+<Location /smart-meters-sos-webapp/static>
+        AuthType shibboleth
+        ShibRequestSetting requireSession 1
+        Header always set Cache-Control "private, no-cache, no-store, proxy-revalidate, no-transform"
+        Header always set Pragma "no-cache"
+        Require shib-session
+
+        ShibUseHeaders on
+        PerlAuthzHandler SD::ShibAuthzHandler
+        PerlOptions +ParseHeaders +SetupEnv +GlobalRequest
+</Location>
+
+#
+# Ensures handler will be accessible.
+#
+<Location /Shibboleth.sso>
+        AuthType None
+        Require all granted
+</Location>
+
+#
+# Used for example style sheet in error templates.
+#
+<IfModule mod_alias.c>
+        <Location /shibboleth-sp>
+                AuthType None
+                Require all granted
+        </Location>
+        Alias /shibboleth-sp/main.css /usr/share/shibboleth/main.css
+</IfModule>
+```
 
 Create a Perl file in the Perl directory (shown in environment variables). Such as in Ubuntu, create the file ``/usr/local/share/perl/5.22.1/SD/OAuthnBearerHandler.pm``
 with the contents provided in [OAuthnBearerHandler.pm](SOS1/OAuthnBearerHandler.pm).
