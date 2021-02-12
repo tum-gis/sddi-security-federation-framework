@@ -337,21 +337,22 @@ yum install ogr_fdw95
 
 #### Initiate database
 
-In this scenario, an old existing database shall be copied to a new one.
+In this scenario, an old existing database (in Ubuntu) 
+shall be copied to a new one (in CentOS).
 
-Locate ``pg_hba.conf``:
+In both servers, add this line to the file ``postgresql.conf``:
 ```bash
-locate pg_hba.conf
-# Ubuntu: /etc/postgresql/9.5/main/pg_hba.conf
-# CentOS: /var/lib/pgsql/9.5/data/pg_hba.conf
+# Ubuntu: /etc/postgresql/9.5/main/postgresql.conf
+# CenOS: /var/lib/pgsql/9.5/data/postgresql.conf
+listen_addresses = '*'
 ```
 
-Edit the file ``pg_hba.conf`` (do this for both servers that host the old and new database):
+In both servers, edit the file ``pg_hba.conf`` (do this for both servers that host the old and new database):
 Change the line
 ```
-# Ubuntu
+# Ubuntu: /etc/postgresql/9.5/main/pg_hba.conf
 local all postgres peer
-# CentOS
+# CentOS: /var/lib/pgsql/9.5/data/pg_hba.conf
 local all all peer
 ```
 to
@@ -361,14 +362,35 @@ local all postgres md5
 # CentOS
 local all all md5
 ```
+And add this line to connect to this database remotely:
+```
+host all all 0.0.0.0/0 md5
+host all all ::1/128 md5
+```
 
-Restart PostgreSQL:
+In both servers, restart PostgreSQL:
 ```
 # Ubuntu
 service postgresql restart
 # CentOS
 systemctl restart postgresql-9.5
 ```
+
+In both servers, configure firewall to allow PostgreSQL:
+```bash
+# Ubuntu
+ufw allow 5432
+ufw status verbose
+# CentOS
+firewall-cmd --zone=public --add-port=5432/tcp --permanent
+firewall-cmd --reload
+firewall-cmd --list-all
+```
+
+Two options are mentioned in this tutorial: either using built-in PostgreSQL functions
+or using the 3D City Database Importer/Exporter.
+
+##### Option 1: Using built-in PostgreSQL functions
 
 Export the entire old database from the ***old server*** to a file:
 ```sql
@@ -404,13 +426,79 @@ Restore the exported database on the ***new server***:
 psql -U postgres -d <NEW_DB> -f <FILENAME>.sql
 ```
 
+##### Option 2: Using the 3D City Database Importer/Exporter
+
+Open a remote connection to the old database using the Importer/Exporter.
+
+Export the entire database in a CityGML file.
+
+Initiate the newer database:
+```bash
+psql -U postgres
+CREATE DATABASE <NEW_DB>;
+\connect <NEW_DB>;
+CREATE EXTENSION postgis;
+CREATE EXTENSION postgis_topology;
+```
+
+Download the Importer/Exporter source codes 
+(here the version [3.2.0](https://github.com/3dcitydb/importer-exporter/releases/tag/v3.2.0) is used,
+since the original database and the WFS were built using this version):
+```bash
+cd /tmp
+wget https://github.com/3dcitydb/importer-exporter/archive/v3.2.0.tar.gz
+tar -xf v3.2.0.tar.gz
+cd /tmp/importer-exporter-3.2.0/resources/3dcitydb/postgresql/
+vi CREATE_DB.sh
+```
+```bash
+#!/bin/bash
+# Provide your database details here ------------------------------------------
+export PGBIN=/usr/bin
+export PGHOST=localhost
+export PGPORT=5432
+export CITYDB=<DATABASE>
+export PGUSER=postgres
+#------------------------------------------------------------------------------
+```
+
+Open the exported CityGML file and look up the EPSG code of the used coordinate system.
+
+Then run the script:
+```bash
+chown postgres:postgres *.sh
+chmod +x *.sh
+./CREATE_DB.sh
+```
+
+Then open another remote connection to the newer database in the Importer/Exporter.
+
+Import the exported CityGML to the new database.
+
+Restart services on the new server:
+```bash
+systemctl restart postgresql-9.5
+systemctl restart httpd
+systemctl restart tomcat
+```
 
 ### Add WFS plugin to Tomcat
 
-Copy the ``.war`` file, such as:
+Copy all the required ``.war`` files, such as:
 ```bash
 cp citydb-wfs-qeop.war /opt/tomcat/latest/webapps
 chown tomcat:tomcat citydb-wfs-qeop.war
+```
+
+Copy the required ``.jar`` files for the selected ``.war`` files, such as:
+```bash
+cd /opt/tomcat/latest/lib/
+cp <PATH>/ojdbc7.jar . 
+cp <PATH>/postgis-jdbc-2.2.0.jar .
+cp <PATH>/postgresql-42.1.4.jar .
+cp <PATH>/postgresql-9.4-1201.jdbc41.jar .
+chown tomcat:tomcat *.jar
+chmod 64ß *.jar
 ```
 
 Then restart Tomcat:
@@ -586,7 +674,7 @@ Configurations for HTTPS
 (please refer to the
 [web service registration](../Troubleshooting.md#createupdate-client-id-client-secret-and-redirect-url)
 to get the ``<CLIENT_ID>`` and ``<CLIENT_SECRET>``):
-```xml
+```
 <VirtualHost *:443>
     ServerName ssdwfs.gis.bgu.tum.de
     DocumentRoot /var/www/html
@@ -601,10 +689,9 @@ to get the ``<CLIENT_ID>`` and ``<CLIENT_SECRET>``):
     SSLCertificateKeyFile /etc/pki/tls/private/<CERT>
     SSLCertificateChainFile /etc/pki/tls/certs/<CHAIN>
 
-    # If the WFS is hosted on the same server, otherwise change localhost to the IP address of the WFS host
-    ProxyPass /citydb-wfs-qeop/wfs http://localhost/citydb-wfs-qeop/wfs retry=5
-    <Proxy http://localhost>
+    <Location />
         <Limit OPTIONS>
+            #Header set Access-Control-Allow-Origin "https://www.3dcitydb.org"
             SetEnvIf Origin (.+) ORIGIN=$1
             Header always set Access-Control-Allow-Origin "%{ORIGIN}e" env=ORIGIN
             Header always set Access-Control-Allow-Credentials true
@@ -628,14 +715,10 @@ to get the ``<CLIENT_ID>`` and ``<CLIENT_SECRET>``):
         PerlSetVar ClientId <CLIENT_ID>
         PerlSetVar ClientSecret <CLIENT_SECRET>
         PerlSetVar ValidateURL https://ssdas.gis.bgu.tum.de/oauth/tokeninfo
-    </Proxy>
-
-    # If the WFS is hosted on the same server, otherwise change localhost to the IP address of the WFS host
-    ProxyPass /citydb-wfs-qeop/wfsx http://localhost/citydb-wfs-qeop/wfs retry=5
+    </Location>
     
     <Directory "/var/www/html">
         Require all granted
-        Header set Access-Control-Allow-Origin "https://www.3dcitydb.org"
     </Directory>
     
     Alias /TermsOfUse /var/www/html/TermsOfUse.html
