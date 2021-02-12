@@ -22,20 +22,23 @@ Create the following types of applications:
 
 | Application type | Scopes |
 |---|---|
-| Client-side web application | Cryptoname, Profile, Email, SAML |
+| Desktop web application | Cryptoname, Profile, Email, SAML |
 | Web service | Cryptoname, SAML |
 
-The first application is used for the web client and shall have a client ID and a redirect URL.
+The first application is used for the web client and shall have a client ID, a client secret and a redirect URL.
 
 The second application is used for the communication between SP (SSDSOS1 and SSDSOS2) with the RS (SSDWFS) 
 and shall have a client ID and a client secret.
 
-A list of all registered applications can be shown using:
+A list of all registered applications can then be shown using:
 
 https://ssdas.gis.bgu.tum.de/listapps
 
-Copy the Client ID, Client Secret and Redirect URL to:
-+   [SSDSOS1 and SSDSOS2](SP)
+Copy the client ID, the client secret and the redirect URL 
+(from the first application) in the [web client](Web%20Client).
+
+Copy the client ID and the client Secret 
+(from the second application) to [SSDSOS1 and SSDSOS2](SP) and [SSDWFS](RS).
 
 #### Update registered applications
 
