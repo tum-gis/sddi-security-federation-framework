@@ -1266,12 +1266,14 @@ Directory "/opt/authorization-server/www">
     AllowOverride All
     Options +FollowSymlinks
     Require all granted
+    Header set Access-Control-Allow-Origin "https://www.3dcitydb.org"
 </Directory>
 
 Directory "/opt/authorization-server/vendor/simplesamlphp/simplesamlphp/www">
     AllowOverride All
     Options +FollowSymlinks
     Require all granted
+    Header set Access-Control-Allow-Origin "https://www.3dcitydb.org"
 </Directory>
 ```
 
