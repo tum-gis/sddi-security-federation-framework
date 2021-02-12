@@ -50,20 +50,20 @@ in our implementation for the web client):
 
             logout: function(callback, options) {
                 var client_id = "<CLIENT_ID>";
+                var client_secret = "<CLIENT_SECRET>";
+                var encodedRedirectURL = "http%3A%2F%2Fwww.3dcitydb.org%2Fdemos%2Fsddi-security-demo";
                 var token = (options.authResponse || {}).access_token;
 
                 var xhttp_token = new XMLHttpRequest();
                 xhttp_token.onreadystatechange = function() {
                     if (this.readyState == 4 && this.status == 200) {
                         hello.utils.store(options, null);
-                        // Change the redirect URL after the parameter ``return`` when needed
-                        // This is an encoded URL
-                        callback("https%3A%2F%2Fssdas.gis.bgu.tum.de%2Foauth%2Flogout%3Freturn%3Dhttps%3A%2F%2Fwww.3dcitydb.org%2Fqeop-web-map-security%2F3dwebclient%2Findex.html%3Ftitle%3D3DCityDB-Web-Map-Client%26shadows%3Dfalse%26terrainShadows%3D0%26latitude%3D51.54598057331442%26longitude%3D-0.012735535769945816%26height%3D138.82756086880357%26heading%3D356.0176491942962%26pitch%3D-53.16764902308586%26roll%3D359.9781813714569%26layer_0%3Durl%253Dhttps%25253A%25252F%25252Fwww.3dcitydb.org%25252F3dcitydb%25252Ffileadmin%25252Fmydata%25252FLondon_QEOP_Demo%25252FQEOP_Buildings_v3%25252FQEOP_Buildings_LoD2_collada_MasterJSON.json%2526name%253DQEOP_Buildings_LoD2%2526active%253Dtrue%2526spreadsheetUrl%253Dhttps%25253A%25252F%25252Fssdwfs.gis.bgu.tum.de%25252Fcitydb-wfs-qeop%25252Fwfs%25253FSERVICE%25253DWFS%252526VERSION%25253D2.0.0%252526REQUEST%25253DGetFeature%2526cityobjectsJsonUrl%253Dhttps%25253A%25252F%25252Fwww.3dcitydb.org%25252F3dcitydb%25252Ffileadmin%25252Fmydata%25252FLondon_QEOP_Demo%25252FQEOP_Buildings_v3%25252FQEOP_Buildings_LoD2.json%2526minLodPixels%253D50%2526maxLodPixels%253D1.7976931348623157e%25252B308%2526maxSizeOfCachedTiles%253D200%2526maxCountOfVisibleTiles%253D200%26layer_1%3Durl%253Dhttps%25253A%25252F%25252Fwww.3dcitydb.org%25252F3dcitydb%25252Ffileadmin%25252Fmydata%25252FLondon_QEOP_Demo%25252FQEOP_Roads_v2%25252FQEOP_Road_Footprints_footprint_MasterJSON.json%2526name%253DQEOP_Streets%2526active%253Dfalse%2526spreadsheetUrl%253Dhttps%25253A%25252F%25252Fwww.google.com%25252Ffusiontables%25252FDataSource%25253Fdocid%25253D1iwLlUEZkgMfSonGYaXV0QuZgGzNex8DzOlbvxTfd%2526cityobjectsJsonUrl%253Dhttps%25253A%25252F%25252Fwww.3dcitydb.org%25252F3dcitydb%25252Ffileadmin%25252Fmydata%25252FLondon_QEOP_Demo%25252FQEOP_Roads_v2%25252FQEOP_Road_Footprints.json%2526minLodPixels%253D50%2526maxLodPixels%253D1.7976931348623157e%25252B308%2526maxSizeOfCachedTiles%253D200%2526maxCountOfVisibleTiles%253D200");
+                        callback("https://ssdas.gis.bgu.tum.de/oauth/logout?return=https%3A%2F%2Fssdds.gis.bgu.tum.de%2FWAYF%2FdeleteSettings%3Freturn%3D" + encodedRedirectURL + "&token=" + token);
                     }
                 };
                 xhttp_token.open("POST", "https://ssdas.gis.bgu.tum.de/oauth/tokenrevoke", true);
                 xhttp_token.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-                xhttp_token.send("client_id=" + client_id + "&token=" + token);
+                xhttp_token.send("client_id=" + client_id + "&client_secret=" + client_secret);
             },
 
             // Refresh the access_token once expired
