@@ -10,9 +10,9 @@
 
 [Failed to decrypt symmetric key: Key is missing data to perform the decryption](#failed-to-decrypt-symmetric-key-key-is-missing-data-to-perform-the-decryption)
 
-### Create/Update Client ID, Client Secret and Redirect URL
+## Create/Update Client ID, Client Secret and Redirect URL
 
-#### Create new
+### Create new
 
 Open:
 
@@ -40,7 +40,7 @@ Copy the client ID, the client secret and the redirect URL
 Copy the client ID and the client Secret 
 (from the second application) to [SSDSOS1 and SSDSOS2](SP) and [SSDWFS](RS).
 
-#### Update registered applications
+### Update registered applications
 
 Registering a new application using the same login and an existing application name 
 will replace the registered application with this name.
@@ -48,12 +48,17 @@ will replace the registered application with this name.
 Registering a new application using the same login and the same existing application name 
 with a different version value shall update the corresponding registered application.
 
-#### Update client ID, client secret and redirect URL
+### Update client ID, client secret and redirect URL
 
 Simply replace these values in the [SP](SP) and [RS](RS) 
 as well as in the [web application](Web%20Client).
 
-### Update SSL certificates
+[*To the top*](#troubleshooting) 
+
+---------------------------
+
+
+## Update SSL certificates
 Normally the certificates and private keys are stored in the directory ``/etc/ssl/certs/``.
 Other directories should (already) only have symbolic links to these files.
 Such directories might be:
@@ -197,8 +202,12 @@ Such directories might be:
             ):
             
             ```
-    
-### Login does not work 
+
+[*To the top*](#troubleshooting)
+
+---------------------------
+
+## Login does not work 
 Error: The login cannot be done with the message such as:
 *   Incorrect cookies, deactivated cookies 
 *   Login via back-button or bookmarks
@@ -230,7 +239,11 @@ timedatectl
 hwclock -w
 ```
 
-### Cookie names
+[*To the top*](#troubleshooting)
+
+---------------------------
+
+## Cookie names
 The cookies must be shared between different participating servers and services, 
 such as the Authorization Server, the Discovery Service, the Google IdP, the SOS1 and SOS2 as well as the WFS.
 
@@ -242,7 +255,11 @@ The demo uses the following names:
 | Prefix | ``SDDI``            |
 | Path   | ``/``               |
 
-### Failed to decrypt symmetric key: Key is missing data to perform the decryption
+[*To the top*](#troubleshooting)
+
+---------------------------
+
+## Failed to decrypt symmetric key: Key is missing data to perform the decryption
 Remove the passphrase from the private key and overwrite it:
 ```bash
 # Remove passphrase and overwrite
@@ -254,3 +271,7 @@ If a new private key is created, follow the instructions to [update ssl certific
 # Remove passphrase and create a new private key
 openssl rsa -in private_key.pem -out private_key_no_passphrase.pem
 ```
+
+[*To the top*](#troubleshooting)
+
+---------------------------
