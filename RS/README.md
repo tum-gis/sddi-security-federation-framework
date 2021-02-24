@@ -286,8 +286,17 @@ yum install postgresql95 postgresql95-server postgresql95-libs postgresql95-cont
 
 Change password of the user ``postgres``:
 ```bash
-psql -U postgres
+# Add the following line in ``/var/lib/pgsql/9.5/data/pg_hba.conf``
+local all all trust
+
+sudo -U postgres psql
 ALTER USER postgres with password '<PASSWORD>';
+
+# Then delete the added line in ``/var/lib/pgsql/9.5/data/pg_hba.conf``
+# local all all trust
+
+# Restart
+systemctl restart postgresql-9.5
 ```
 
 Run the service on boot:
