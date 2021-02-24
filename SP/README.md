@@ -36,61 +36,110 @@ to get the ``<CLIENT_ID>`` and ``<CLIENT_SECRET>``.
 
 ````
 <Location /weather-sensors-sos-webapp/service>
-    Header always set Cache-Control "private, no-cache, no-store, proxy-revalidate, no-transform
-    Header always set Pragma "no-cache"
-    <If "%{HTTP:Authorization} =~ /Bearer/ || %{QUERY_STRING} =~ /access_token/">
-        AuthType Bearer
-        AuthName "SDDI Security Demo"
-        Require valid-user
-        PerlAuthenHandler SD::OAuthnBearerHandler
-        PerlOptions +ParseHeaders +SetupEnv +GlobalRequest
-        PerlSetVar ClientId <CLIENT_ID>
-        PerlSetVar ClientSecret <CLIENT_SECRET>
-        PerlSetVar ValidateURL https://ssdas.gis.bgu.tum.de/oauth/tokeninfo
-
-        Header unset Authorization
-        RewriteEngine on
-        # a
-        #  ?a=foo
-        #  Starts with a=, non-ampersand to the end.
-        #  Suppress querystring with trailing question mark.
-        RewriteCond %{QUERY_STRING} ^access_token=([^&]+)$
-        RewriteRule .* /weather-sensors-sos-webapp/service [END,PT,E=REWRITTEN:1]
-
-        # a-other
-        #  ?a=foo&b=bar, ?a=foo&b=bar&c=1
-        #  Starts with a=, non-ampersand, ampersand, remaining required.
-        #  Escape question mark so it doesn't include entire original querystring.
-        RewriteCond %{QUERY_STRING} ^access_token=([^&]+)&(.+)
-        RewriteRule .* /weather-sensors-sos-webapp/service?%2 [END,PT,E=REWRITTEN:1]
-
-        # other-a or other-a-other
-        #  ?b=baz&a=qux, ?b=baz&c=1&a=qux
-        #  ?c=1&a=foo&d=2&b=bar&e=3, ?z=4&c=1&a=foo&d=2&b=bar&e=3
-        #  Starts with anything, ampersand, a=, non-ampersand, remaining optional.
-        #  The remaining optional lets it follow with nothing, or with ampersand and more parameters.
-        #  Escape question mark so it doesn't include entire original querystring.
-        RewriteCond %{QUERY_STRING} ^(.+)&access_token=([^&]+)(.*)$
-        RewriteRule .* /weather-sensors-sos-webapp/service?%1%3 [END,PT,E=REWRITTEN:1]
-    </If>
-    <Elseif "%{ENV:REDIRECT_REWRITTEN} =~ /1/">
-        Require all granted
-    </Elseif>
-    <Else>
-        AuthType shibboleth
-        ShibRequestSetting requireSession 1
-        Require shib-session
-	    #Require all granted
-    </Else>
-</Location>
-
-<Location /weather-sensors-sos-webapp/static>
-        AuthType shibboleth
-        ShibRequestSetting requireSession 1
-        Require shib-attr homeOrganization TUM SECD
         Header always set Cache-Control "private, no-cache, no-store, proxy-revalidate, no-transform"
         Header always set Pragma "no-cache"
-        Require shib-session
+        <If "%{HTTP:Authorization} =~ /Bearer/ || %{QUERY_STRING} =~ /access_token/">
+                AuthType Bearer
+                AuthName "SDDI Security Demo"
+                Require valid-user
+                PerlAuthenHandler SD::OAuthnBearerHandler
+                PerlOptions +ParseHeaders +SetupEnv +GlobalRequest
+                PerlSetVar ClientId <CLIENT_ID>
+                PerlSetVar ClientSecret <CLIENT_SECRET>
+                PerlSetVar ValidateURL https://ssdas.gis.bgu.tum.de/oauth/tokeninfo
+        
+                Header unset Authorization
+                RewriteEngine on
+                # a
+                #  ?a=foo
+                #  Starts with a=, non-ampersand to the end.
+                #  Suppress querystring with trailing question mark.
+                RewriteCond %{QUERY_STRING} ^access_token=([^&]+)$
+                RewriteRule .* /weather-sensors-sos-webapp/service [END,PT,E=REWRITTEN:1]
+        
+                # a-other
+                #  ?a=foo&b=bar, ?a=foo&b=bar&c=1
+                #  Starts with a=, non-ampersand, ampersand, remaining required.
+                #  Escape question mark so it doesn't include entire original querystring.
+                RewriteCond %{QUERY_STRING} ^access_token=([^&]+)&(.+)
+                RewriteRule .* /weather-sensors-sos-webapp/service?%2 [END,PT,E=REWRITTEN:1]
+        
+                # other-a or other-a-other
+                #  ?b=baz&a=qux, ?b=baz&c=1&a=qux
+                #  ?c=1&a=foo&d=2&b=bar&e=3, ?z=4&c=1&a=foo&d=2&b=bar&e=3
+                #  Starts with anything, ampersand, a=, non-ampersand, remaining optional.
+                #  The remaining optional lets it follow with nothing, or with ampersand and more parameters.
+                #  Escape question mark so it doesn't include entire original querystring.
+                RewriteCond %{QUERY_STRING} ^(.+)&access_token=([^&]+)(.*)$
+                RewriteRule .* /weather-sensors-sos-webapp/service?%1%3 [END,PT,E=REWRITTEN:1]
+        </If>
+        <Elseif "%{ENV:REDIRECT_REWRITTEN} =~ /1/">
+                Require all granted
+        </Elseif>
+        <Else>
+                AuthType shibboleth
+                ShibRequestSetting requireSession 1
+                Require shib-session
+                #Require all granted
+        </Else>
+</Location>
+
+#<Location /weather-sensors-sos-webapp/static>
+#       AuthType shibboleth
+#       ShibRequestSetting requireSession 1
+#       Require shib-attr homeOrganization TUM SECD
+#       Header always set Cache-Control "private, no-cache, no-store, proxy-revalidate, no-transform"
+#       Header always set Pragma "no-cache"
+#       Require shib-session
+#</Location>
+
+<Location /weather-sensors-sos-webapp/static>
+        Header always set Cache-Control "private, no-cache, no-store, proxy-revalidate, no-transform"
+        Header always set Pragma "no-cache"
+        <If "%{HTTP:Authorization} =~ /Bearer/ || %{QUERY_STRING} =~ /access_token/">
+                AuthType Bearer
+                AuthName "SSD Security Demo"
+                Require valid-user
+                PerlAuthenHandler SD::OAuthnBearerHandler
+                PerlOptions +ParseHeaders +SetupEnv +GlobalRequest
+                PerlSetVar ClientId 1b4e8f7e-c447-2463-d3ef-8a28f2844ab1
+                PerlSetVar ClientSecret 0b9e16b3f0507963fba472c50fd437cfa9b5dfa495d6d23b715c49e0f2637fef
+                PerlSetVar ValidateURL https://ssdas.gis.bgu.tum.de/oauth/tokeninfo
+
+                Header unset Authorization
+                RewriteEngine on
+                # a
+                #  ?a=foo
+                #  Starts with a=, non-ampersand to the end.
+                #  Suppress querystring with trailing question mark.
+                RewriteCond %{QUERY_STRING} ^access_token=([^&]+)$
+                RewriteRule .* /weather-sensors-sos-webapp/static [END,PT,E=REWRITTEN:1]
+
+                # a-other
+                #  ?a=foo&b=bar, ?a=foo&b=bar&c=1
+                #  Starts with a=, non-ampersand, ampersand, remaining required.
+                #  Escape question mark so it doesn't include entire original querystring.
+                RewriteCond %{QUERY_STRING} ^access_token=([^&]+)&(.+)
+                RewriteRule .* /weather-sensors-sos-webapp/static?%2 [END,PT,E=REWRITTEN:1]
+
+                # other-a or other-a-other
+                #  ?b=baz&a=qux, ?b=baz&c=1&a=qux
+                #  ?c=1&a=foo&d=2&b=bar&e=3, ?z=4&c=1&a=foo&d=2&b=bar&e=3
+                #  Starts with anything, ampersand, a=, non-ampersand, remaining optional.
+                #  The remaining optional lets it follow with nothing, or with ampersand and more parameters.
+                #  Escape question mark so it doesn't include entire original querystring.
+                RewriteCond %{QUERY_STRING} ^(.+)&access_token=([^&]+)(.*)$
+                RewriteRule .* /weather-sensors-sos-webapp/static?%1%3 [END,PT,E=REWRITTEN:1]
+        </If>
+        <Elseif "%{ENV:REDIRECT_REWRITTEN} =~ /1/">
+                Require all granted
+        </Elseif>
+        <Else>
+                AuthType shibboleth
+                ShibRequestSetting requireSession 1
+                Require shib-session
+                #Require all granted
+        </Else>
 </Location>
 
 Alias /shibboleth-sp/main.css /usr/share/shibboleth/main.css
@@ -106,7 +155,7 @@ The SOS2 configuration is basically identical to the SOS1 with one important dif
 
 ```
 <Location /smart-meters-sos-webapp/service>
-    Header always set Cache-Control "private, no-cache, no-store, proxy-revalidate, no-transform
+    Header always set Cache-Control "private, no-cache, no-store, proxy-revalidate, no-transform"
     Header always set Pragma "no-cache"
     <If "%{HTTP:Authorization} =~ /Bearer/ || %{QUERY_STRING} =~ /access_token/">
         AuthType Bearer
@@ -157,36 +206,88 @@ The SOS2 configuration is basically identical to the SOS1 with one important dif
 	</Else>
 </Location>
 
+#<Location /smart-meters-sos-webapp/static>
+#       AuthType shibboleth
+#       ShibRequestSetting requireSession 1
+#       Header always set Cache-Control "private, no-cache, no-store, proxy-revalidate, no-transform"
+#       Header always set Pragma "no-cache"
+#       Require shib-session
+#       ShibUseHeaders on
+#       PerlAuthzHandler SD::ShibAuthzHandler
+#       PerlOptions +ParseHeaders +SetupEnv +GlobalRequest
+#</Location>
+
 <Location /smart-meters-sos-webapp/static>
-        AuthType shibboleth
-        ShibRequestSetting requireSession 1
         Header always set Cache-Control "private, no-cache, no-store, proxy-revalidate, no-transform"
         Header always set Pragma "no-cache"
-        Require shib-session
+        <If "%{HTTP:Authorization} =~ /Bearer/ || %{QUERY_STRING} =~ /access_token/">
+                AuthType Bearer
+                AuthName "SSD Security Demo"
+                Require valid-user
+                PerlAuthenHandler SD::OAuthzBearerHandler
+                PerlOptions +ParseHeaders +SetupEnv +GlobalRequest
+                PerlSetVar ClientId 1b4e8f7e-c447-2463-d3ef-8a28f2844ab1
+                PerlSetVar ClientSecret 0b9e16b3f0507963fba472c50fd437cfa9b5dfa495d6d23b715c49e0f2637fef
+                PerlSetVar ValidateURL https://ssdas.gis.bgu.tum.de/oauth/tokeninfo
+                PerlSetVar UserInfoURL https://ssdas.gis.bgu.tum.de/oauth/userinfo
 
-        ShibUseHeaders on
-        PerlAuthzHandler SD::ShibAuthzHandler
-        PerlOptions +ParseHeaders +SetupEnv +GlobalRequest
+                Header unset Authorization
+                RewriteEngine on
+                # a
+                #  ?a=foo
+                #  Starts with a=, non-ampersand to the end.
+                #  Suppress querystring with trailing question mark.
+                RewriteCond %{QUERY_STRING} ^access_token=([^&]+)$
+                RewriteRule .* /smart-meters-sos-webapp/static [END,PT,E=REWRITTEN:1]
+
+                # a-other
+                #  ?a=foo&b=bar, ?a=foo&b=bar&c=1
+                #  Starts with a=, non-ampersand, ampersand, remaining required.
+                #  Escape question mark so it doesn't include entire original querystring.
+                RewriteCond %{QUERY_STRING} ^access_token=([^&]+)&(.+)
+                RewriteRule .* /smart-meters-sos-webapp/static?%2 [END,PT,E=REWRITTEN:1]
+
+                # other-a or other-a-other
+                #  ?b=baz&a=qux, ?b=baz&c=1&a=qux
+                #  ?c=1&a=foo&d=2&b=bar&e=3, ?z=4&c=1&a=foo&d=2&b=bar&e=3
+                #  Starts with anything, ampersand, a=, non-ampersand, remaining optional.
+                #  The remaining optional lets it follow with nothing, or with ampersand and more parameters.
+                #  Escape question mark so it doesn't include entire original querystring.
+                RewriteCond %{QUERY_STRING} ^(.+)&access_token=([^&]+)(.*)$
+                RewriteRule .* /smart-meters-sos-webapp/static?%1%3 [END,PT,E=REWRITTEN:1]
+        </If>
+        <Elseif "%{ENV:REDIRECT_REWRITTEN} =~ /1/">
+                Require all granted
+        </Elseif>
+        <Else>
+                AuthType shibboleth
+                ShibRequestSetting requireSession 1
+                Require shib-session
+                ShibUseHeaders on
+                PerlAuthzHandler SD::ShibAuthzHandler
+                PerlOptions +ParseHeaders +SetupEnv +GlobalRequest
+                #Require all granted
+        </Else>
 </Location>
 
 #
 # Ensures handler will be accessible.
 #
-<Location /Shibboleth.sso>
-        AuthType None
-        Require all granted
-</Location>
+#<Location /Shibboleth.sso>
+#        AuthType None
+#        Require all granted
+#</Location>
 
 #
 # Used for example style sheet in error templates.
 #
-<IfModule mod_alias.c>
-        <Location /shibboleth-sp>
-                AuthType None
-                Require all granted
-        </Location>
-        Alias /shibboleth-sp/main.css /usr/share/shibboleth/main.css
-</IfModule>
+#<IfModule mod_alias.c>
+#        <Location /shibboleth-sp>
+#                AuthType None
+#                Require all granted
+#        </Location>
+#        Alias /shibboleth-sp/main.css /usr/share/shibboleth/main.css
+#</IfModule>
 ```
 
 Create a Perl file in the Perl directory (shown in environment variables). Such as in Ubuntu, create the file ``/usr/local/share/perl/5.22.1/SD/OAuthnBearerHandler.pm``
@@ -279,14 +380,13 @@ curl https://www.aai.dfn.de/fileadmin/metadata/dfn-aai.g2.pem -o dfn-aai.g2.pem
 <!-- SDDI Google IdP Metadata -->
 <MetadataProvider type="XML" file="google-idp-metadata.xml"/>
 
-
 <!-- DFN Production -->
-<MetadataProvider type="XML" validate="true"
+<MetadataProvider type="XML" validate="false"
                   uri="https://www.aai.dfn.de/fileadmin/metadata/dfn-aai-basic-metadata.xml"
                   backingFilePath="dfn-aai-basic-metadata.xml" reloadInterval="3600">
     <MetadataFilter type="Signature" certificate="dfn-aai.g2.pem"/>
 </MetadataProvider>
-<MetadataProvider type="XML" validate="true"
+<MetadataProvider type="XML" validate="false"
                   uri="https://www.aai.dfn.de/fileadmin/metadata/dfn-aai-metadata.xml"
                   backingFilePath="dfn-aai-metadata.xml" reloadInterval="3600">
     <MetadataFilter type="Signature" certificate="dfn-aai.g2.pem"/>
@@ -301,4 +401,31 @@ curl https://www.aai.dfn.de/fileadmin/metadata/dfn-aai.g2.pem -o dfn-aai.g2.pem
 
 <!-- Certificates. -->
 <CredentialResolver type="File" key="private_key_no_passphrase.pem" certificate="certificate.pem"/>
+```
+
+### Update ``/etc/shibboleth/attribute-map.xml``
+To make use of the attributes provided by the Google Idp, 
+the applications hosted using Shibboleth might requires (personal) attributes to enhance the user experience 
+(such as to greet users using their name).
+
+To do this, edit the file ``/etc/shibboleth/attribute-map.xml``:
+```xml
+<!-- Attributes from Google IdP -->
+<Attribute name="sub" nameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri" id="sub" />
+<Attribute name="uid" nameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri" id="uid" />
+<Attribute name="displayName" nameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri" id="displayName" />
+<Attribute name="givenName" nameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri" id="givenName" />
+<Attribute name="sn" nameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri" id="sn" />
+<Attribute name="picture" nameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri" id="picture" />
+<Attribute name="email" nameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri" id="email" />
+<Attribute name="emailVerified" nameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri" id="emailVerified" />
+<Attribute name="locale" nameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri" id="locale" />
+<Attribute name="subject-id" nameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri" id="subject-id" />
+```
+
+Restart servers:
+```bash
+systemctl restart shibd
+systemctl restart tomcat
+systemctl restart apache2
 ```
