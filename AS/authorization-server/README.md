@@ -184,12 +184,13 @@ mysql_secure_installation
 The version 11 is important as some SQL commands are only supported starting V11.
 
 ````
-rpm -Uvh https://yum.postgresql.org/11/redhat/rhel-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+#rpm -Uvh https://yum.postgresql.org/11/redhat/rhel-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+rpm -Uvh https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
 yum install postgresql11-server postgresql11 postgresql11-contrib  -y
 /usr/pgsql-11/bin/postgresql-11-setup initdb
 systemctl enable postgresql-11.service
 systemctl start postgresql-11.service
-yum install oidentd
+yum -y install oidentd
 ````
 
 Modify local access:
@@ -300,6 +301,21 @@ psql -c "ALTER user php WITH ENCRYPTED PASSWORD 'password'";
 psql -U php -W samlas
 samlas=# \q
 ```` 
+
+Change password of the user ``postgres``:
+```bash
+# Add the following line in ``/var/lib/pgsql/11/data/pg_hba.conf``
+local all all trust
+
+sudo -U postgres psql
+ALTER USER postgres with password '<PASSWORD>';
+
+# Then delete the added line in ``/var/lib/pgsql/11/data/pg_hba.conf``
+# local all all trust
+
+# Restart
+systemctl restart postgresql-11
+```
 
 Grant privileges to database
 
@@ -1275,6 +1291,22 @@ Directory "/opt/authorization-server/vendor/simplesamlphp/simplesamlphp/www">
     Require all granted
     Header set Access-Control-Allow-Origin "https://www.3dcitydb.org"
 </Directory>
+```
+
+Open ``/etc/httpd/conf/httpd.conf``:
+```bash
+ServerName ssdas.gis.bgu.tum.de
+ # Redirect all http to https
+RewriteEngine On
+RewriteCond %{HTTPS} off
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI}
+```
+
+In the case of redirecting all HTTP requests to HTTPS, HTTP must be allowed in the firewall:
+```
+firewall-cmd --permanent --zone=public --add-service=http
+firewall-cmd --reload
+firewall-cmd --list-all
 ```
 
 ### Other settings
