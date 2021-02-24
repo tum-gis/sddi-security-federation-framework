@@ -4,6 +4,10 @@
 
 [Update SSL certificates](#update-ssl-certificates)
 
+[Update Metadata of Google IdP](#update-metadata-of-google-idp)
+
+[Logging in SimpleSAMLPHP](#logging-in-simplesamlphp)
+
 [Login does not work](#login-does-not-work)
 
 [Cookie names](#cookie-names)
@@ -199,6 +203,45 @@ Such directories might be:
             ):
             
             ```
+
+[*To the top*](#troubleshooting)
+
+---------------------------
+
+## Update metadata of Google IdP
+
+The metadata of Google IdP is used in the [Discovery Service](DS) and both SOS1 and SOS2 in [SP](SP).
+Download the new metadata and rewrite. Please refer to the corresponding instructions in each service.
+
+[*To the top*](#troubleshooting)
+
+---------------------------
+
+## Logging in SimpleSAMLphp
+
+By default SimpleSAMLphp uses ``syslog`` to mange logs. This sometimes does not work with every system. 
+To change this to write to log files, follow the following steps:
+
+1.  Edit file ``.../vendor/simplesamlphp/simplesamlphp/config/config.php``:
+    ```php
+    'logging.handler' => 'file', // 'syslog'
+    'loggingdir' => 'log/',
+    ```
+
+1.  By default the log file shall be created in ``.../vendor/simplesamlphp/simplesamlphp/log/simplesamlphp.log``:
+    ```bash
+    cd .../vendor/simplesamlphp/simplesamlphp
+    mkdir log
+    touch log/simplesamlphp.log
+    chown apache:apache -R log/
+    chmod g+w -R log/
+    chcon -Rv --type=httpd_sys_rw_content_t log/
+    ```
+
+1.  Restart Apache server:
+    ```bash
+    systemctl restart httpd 
+    ```
 
 [*To the top*](#troubleshooting)
 
