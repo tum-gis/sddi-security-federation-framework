@@ -20,16 +20,7 @@
     cd /etc/ssl/certs
     openssl req -newkey rsa:3072 -new -x509 -days 3652 -nodes -out google-idp_cert.pem -keyout google-idp_key.pem
     ````
-    with the following information:
-    ````
-    countryName = DE
-    stateOrProvinceName = Bayern
-    localityName = Muenchen
-    organizationName = Technische Universitaet Muenchen
-    organizationalUnitName = Ingenieurfakultaet Bau Geo Umwelt
-    commonName = google-idp.gis.bgu.tum.de
-    ````
-    The resulting private key does not have any passphrase.
+    The resulting private key in this case does not have any passphrase.
 
 *   Allow only ``root`` to have read access to the key file:
     ````bash
@@ -66,6 +57,22 @@
     This will create a directory ``vendor`` in the current directory ``/var/google-idp``.
 
 1.  Configure Apache
+    *   Open ``/etc/httpd/conf/httpd.conf``:
+    ```bash
+    ServerName google-idp.gis.bgu.tum.de
+     # Redirect all http to https
+    RewriteEngine On
+    RewriteCond %{HTTPS} off
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI}
+    ```
+    
+    In the case of redirecting all HTTP requests to HTTPS, HTTP must be allowed in the firewall:
+    ```
+    firewall-cmd --permanent --zone=public --add-service=http
+    firewall-cmd --reload
+    firewall-cmd --list-all
+    ```
+
     *   Open ``/etc/httpd/conf.d/ssl.conf``:
         ````bash
         <VirtualHost *>
@@ -128,7 +135,174 @@
         'session.cookie.domain' => '.gis.bgu.tum.de',
         'session.phpsession.cookiename' => 'SimpleSAML',
         'session.authtoken.cookiename' => 'SimpleSAMLAuthToken',
+        
+        'session.cookie.secure' => true,
         ````
+
+### Create a database for SimpleSAMLphp
+
+SimpleSAMLphp requires a database to store SAML sessions. 
+This can be PHPSession, SQL, Memcache or Redis.
+In this section, MySQL + PostgreSQL shall be used:
+
+##### Install MySQL
+```
+yum -y install wget
+cd /tmp
+wget http://repo.mysql.com/mysql-community-release-el7-5.noarch.rpm
+rpm -ivh mysql-community-release-el7-5.noarch.rpm
+yum -y update
+yum -y install mysql-server
+systemctl enable mysqld
+systemctl start mysqld
+```
+
+After a successful installation it is recommended to harden MySQL. 
+A simplistic way to do that is this:
+````
+mysql_secure_installation
+````
+
+Create the Google IdP database (`samlidp` and `samldb` for this documentation).
+````bash
+mysql
+````
+OR as ``root``
+````
+mysql -u root -p
+````
+then
+````bash
+mysql> CREATE DATABASE samlidp;
+mysql> CREATE DATABASE samldb;
+````
+
+To start the Event Scheduler (MySQL on CENTOS) add/edit the following entry in `/etc/my.cnf`:
+```
+[mysqld]
+event_scheduler = on
+```
+Then restart:
+````bash
+service mysqld restart
+````
+
+Then:
+```
+mysql -u root -p # or mysql
+```
+````
+mysql> CREATE USER 'php'@'localhost' IDENTIFIED BY 'password';
+mysql> GRANT ALL PRIVILEGES ON samlidp.* TO 'php'@'localhost';
+mysql> GRANT ALL PRIVILEGES ON samldb.* TO 'php'@'localhost';
+mysql> FLUSH PRIVILEGES;
+````
+
+##### Altternative: Install PostgreSQL
+The version 11 is important as some SQL commands are only supported starting V11.
+````
+cd /tmp
+#rpm -Uvh https://yum.postgresql.org/11/redhat/rhel-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+rpm -Uvh https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+yum install postgresql11-server postgresql11 postgresql11-contrib  -y
+/usr/pgsql-11/bin/postgresql-11-setup initdb
+systemctl enable postgresql-11.service
+systemctl start postgresql-11.service
+yum -y install oidentd
+````
+
+Modify local access:
+````
+vi /var/lib/pgsql/11/data/pg_hba.conf
+````
+
+Modify line `local all all peer`
+to `local all all md5`
+and add line `host samlidp php 127.0.0.1/32 md5`.
+
+Change password of the user ``postgres``:
+```bash
+# Add the following line in ``/var/lib/pgsql/11/data/pg_hba.conf``
+local all all trust
+
+sudo -U postgres psql
+ALTER USER postgres with password '<PASSWORD>';
+
+# Then delete the added line in ``/var/lib/pgsql/11/data/pg_hba.conf``
+# local all all trust
+
+# Restart
+systemctl restart postgresql-11
+```
+
+Create the database `samlidp` and `samldb`:
+````
+cd ...
+su postgres
+createuser php;
+createdb samlidp -O php;
+createdb samldb -O php;
+psql -c "ALTER user php WITH ENCRYPTED PASSWORD 'password'";
+psql -U php -W samlidp
+samlidp=# \q
+psql -U php -W samldb
+samlidp=# \q
+```` 
+
+Grant privileges to database
+````
+su postgres
+psql samlidp
+samlidp=# GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public to php;
+samlidp=# GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public to php;
+samlidp=# GRANT ALL PRIVILEGES ON DATABASE samlidp to php;
+samlidp=# GRANT ALL PRIVILEGES ON DATABASE samldb to php;
+````
+
+##### Configure SimpleSAMLphp
+Then edit the file ``/var/google-idp/vendor/simplesamlphp/simplesamlphp/config/config.php``:
+```php
+'store.type' => 'sql',
+#'store.sql.dsn' => 'pgsql:dbname=samlidp;host=localhost;port=5432',
+'store.sql.dsn' => 'mysql:dbname=samlidp;host=localhost;port=3306',
+'store.sql.username' => 'php',
+'store.sql.password' => 'password',
+'store.sql.prefix' => 'SimpleSAMLphp',
+
+#'database.dsn' => 'pgsql:dbname=samldb;host=localhost;port=5432',
+'database.dsn' => 'mysql:dbname=samldb;host=localhost;port=3306',
+'database.username' => 'php',
+'database.password' => 'password',
+'database.prefix' => 'SimpleSAMLphp',
+```
+
+Allow Apache to connect to remote database:
+```
+# Check SELinux
+sestatus
+
+# See flags on httpd
+getsebool -a | grep httpd
+
+# Allow Apache to connect to remote database through SELinux
+setsebool httpd_can_network_connect_db 1
+
+# Use -P option to make the change permanent
+# (or else the flag will be set to 0 again after reboot)
+setsebool -P httpd_can_network_connect_db 1
+```
+
+Restart:
+```
+systemctl restart httpd
+systemctl restart mysqld
+systemctl restart postgresql-11
+```
+
+### Logging in SimpleSAMLphp
+
+Please follow [the instructions](/Troubleshooting.md#logging-in-simplesamlphp) 
+to configure the logging in SimpleSAMLphp.
     
 ### Set up SimpleSAMLphp Identity Provider
 
@@ -194,6 +368,11 @@
 
     'auth' => 'google',
     
+    'SingleLogoutServiceBinding' => array(
+        'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect',
+        'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST',
+    ),
+    
     // *** Metadata attributes ***
     'UIInfo' => [
         'DisplayName' => [
@@ -239,72 +418,35 @@
     for more information on the attributes used here.
 
 1.  Configure the file ``/var/google-idp/vendor/simplesamlphp/simplesamlphp/metadata/saml20-sp-remote.php``
-    to trust SSDSOS1 and SSDSOS2
-    ````php
+    to trust SSDSOS1 and SSDSOS2.
+    
+    The metadata of SOS1 and SOS2 (Shibboleth) can be retrieved using:
+
+    https://ssdsos1.gis.bgu.tum.de/Shibboleth.sso/Metadata
+
+    https://ssdsos2.gis.bgu.tum.de/Shibboleth.sso/Metadata
+
+    This produces metadata in XML format. To convert it to SimpleSAMLPHP metadata format, use the converter:
+
+    https://google-idp.gis.bgu.tum.de/simplesaml/admin/metadata-converter.php
+
+    ```php
     /*
      * SSDSOS1
      */
     $metadata['https://ssdsos1.gis.bgu.tum.de/shibboleth'] = [
-        'entityid' => 'https://ssdsos1.gis.bgu.tum.de/shibboleth',
-        'contacts' => [],
-        'metadata-set' => 'saml20-sp-remote',
-        'AssertionConsumerService' => [
-            0 => [
-                'Binding' => 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST',
-                'Location' => 'https://ssdsos1.gis.bgu.tum.de/Shibboleth.sso/SAML2/POST',
-                'index' => 1,
-            ],
-            1 => [
-                'Binding' => 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST-SimpleSign',
-                'Location' => 'https://ssdsos1.gis.bgu.tum.de/Shibboleth.sso/SAML2/POST-SimpleSign',
-                'index' => 2,
-            ],
-            2 => [
-                'Binding' => 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact',
-                'Location' => 'https://ssdsos1.gis.bgu.tum.de/Shibboleth.sso/SAML2/Artifact',
-                'index' => 3,
-            ],
-            3 => [
-                'Binding' => 'urn:oasis:names:tc:SAML:2.0:bindings:PAOS',
-                'Location' => 'https://ssdsos1.gis.bgu.tum.de/Shibboleth.sso/SAML2/ECP',
-                'index' => 4,
-            ],
-        ],
+        // Contents ...
     ];
     
     /*
      * SSDSOS2
      */
     $metadata['https://ssdsos2.gis.bgu.tum.de/shibboleth'] = [
-        'entityid' => 'https://ssdsos2.gis.bgu.tum.de/shibboleth',
-        'contacts' => [],
-        'metadata-set' => 'saml20-sp-remote',
-        'AssertionConsumerService' => [
-            0 => [
-                'Binding' => 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST',
-                'Location' => 'https://ssdsos2.gis.bgu.tum.de/Shibboleth.sso/SAML2/POST',
-                'index' => 1,
-            ],
-            1 => [
-                'Binding' => 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST-SimpleSign',
-                'Location' => 'https://ssdsos2.gis.bgu.tum.de/Shibboleth.sso/SAML2/POST-SimpleSign',
-                'index' => 2,
-            ],
-            2 => [
-                'Binding' => 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact',
-                'Location' => 'https://ssdsos2.gis.bgu.tum.de/Shibboleth.sso/SAML2/Artifact',
-                'index' => 3,
-            ],
-            3 => [
-                'Binding' => 'urn:oasis:names:tc:SAML:2.0:bindings:PAOS',
-                'Location' => 'https://ssdsos2.gis.bgu.tum.de/Shibboleth.sso/SAML2/ECP',
-                'index' => 4,
-            ],
-        ],
+        // Contents ...
     ];
-    ````
+    ```
     
-1.  Further append the metadata (flat-file format) of the following SPs from the Authorization Server to the file 
+1.  Further append the metadata with the following SPs from the Authorization Server to the file 
     ``/var/google-idp/vendor/simplesamlphp/simplesamlphp/metadata/saml20-sp-remote.php``:
     
     https://ssdas.gis.bgu.tum.de/simplesaml/module.php/saml/sp/metadata.php/oauth?output=xhtml
@@ -341,6 +483,8 @@ mentioned [above](#set-up-simplesamlphp-identity-provider) contain claims such a
 These must be transformed so that the Authorization Server can make sense of.
     
 1.  Go to ``/var/google-idp/vendor/simplesamlphp/simplesamlphp/metadata/saml-idp-hosted.php`` and add the following element:
+
+    ***With the template ``GoogleOIDC``:***
     ```php
     'authproc' => [
         // Convert oidc names to ldap friendly names
@@ -372,17 +516,57 @@ These must be transformed so that the Authorization Server can make sense of.
         ],
     ],
     ```
+    
     This changes the attribute names (as identified by the class ``'core:AttributeMap'``) contained in the Google response to those compatible with the Authorization Server,
-as listed in lines [133-160](../AS/authorization-server/www/as.php) of ``as.php``.
+    as listed in lines [133-160](../AS/authorization-server/www/as.php) of ``as.php``.
     The file [oidc2name](https://github.com/cirrusidentity/simplesamlphp-module-authoauth2/blob/master/attributemap/oidc2name.php)
-contains a pre-defined set of mapping rules according to the [OpenID Connect specs](https://openid.net/specs/openid-connect-core-1_0.html#Claims). 
-    This is further appended by additional four rules as shown above. 
+    contains a pre-defined set of mapping rules according to the [OpenID Connect specs](https://openid.net/specs/openid-connect-core-1_0.html#Claims).
+    This is further appended by additional four rules as shown above.
     The number ``90`` and ``95`` indicate the priority, in which the rules are executed: smaller priorities first.
     This means that the pre-defined rules in ``oidc2name`` shall be executed first.
-    
+
     For more information on the ``core:AttributeMap``, please refer to the [documentation](https://simplesamlphp.org/docs/stable/core:authproc_attributemap).
-    It is also possible to not only change attribute names, but also insert, delete, etc. them, 
+    It is also possible to not only change attribute names, but also insert, delete, etc. them,
     please refer to the classes listed in the [documentation](https://simplesamlphp.org/docs/stable/simplesamlphp-authproc#section_2).
+    
+    ***Alternatively, without the template ``GoogleOIDC``:***
+    ```php
+    'authproc' => [
+        // Create an additional attribute NameID that has the same value as sub
+        1 => array(
+            'class' => 'saml:PersistentNameID',
+            'attribute' => 'sub',
+            'NameQualifier' => TRUE,
+            'nameId' => TRUE,
+        ),
+        // Create an additional attribute subject-id that has the same value as sub
+        2 => array(
+            'class' => 'core:AttributeCopy',
+            'sub' => array('subject-id', 'uid'),
+        ),
+        // Change value true and false to 1 and 0
+        93 => [
+            'class' => 'core:AttributeAlter',
+            'subject' => 'email_verified',
+            'pattern' => '/true/',
+            'replacement' => '1',
+        ],
+        94 => [
+            'class' => 'core:AttributeAlter',
+            'subject' => 'email_verified',
+            'pattern' => '/false/',
+            'replacement' => '0',
+        ],
+        // Rename attributes for compatibility with the Authorization Server (see as.php)
+        95 => [
+            'class' => 'core:AttributeMap',
+            'name' => 'displayName',
+            'given_name' => 'givenName',
+            'family_name' => 'sn',
+            'email_verified' => 'emailVerified',
+        ],
+    ],
+    ```
     
 1.  Note that existing rules with smaller priority number that affect the same attributes might interfere with the rules executed afterwards.
     For this reason, it is recommended to **remove** the following elements in ``/var/google-idp/vendor/simplesamlphp/simplesamlphp/config/config.php``:
