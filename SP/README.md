@@ -368,39 +368,62 @@ curl https://www.aai.dfn.de/fileadmin/metadata/dfn-aai-edugain+idp-metadata.xml 
 curl https://www.aai.dfn.de/fileadmin/metadata/dfn-aai.g2.pem -o dfn-aai.g2.pem
 ```
 
+### Update ``/etc/shibboleth/securty-policy.xml``
+```xml
+<!-- Turns off the requirement of having signed LogoutResponses -->
+<Policy id="unsigned-slo">
+  <PolicyRule type="NullSecurity"/>
+</Policy>
+```
+
 ### Update ``/etc/shibboleth/shibboleth2.xml``
 ```xml
 <ApplicationDefaults entityID="https://ssdsos<N>.gis.bgu.tum.de/shibboleth"
                      REMOTE_USER="eppn persistent-id targeted-id">
     
-<SSO discoveryProtocol="SAMLDS" discoveryURL="https://ssdds.gis.bgu.tum.de/WAYF">
-    SAML2
-</SSO>
+    <Sessions>
+        <!-- https://stackoverflow.com/questions/34615409/shibboleth-sp-logout-results-in-security-of-logoutresponse-not-established -->
+        <!-- https://wiki.shibboleth.net/confluence/display/SP3/SingleLogoutService -->
+        <md:SingleLogoutService Location="/SLO/Redirect" conf:template="bindingTemplate.html" conf:policyId="unsigned-slo" Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"/>
 
-<!-- SDDI Google IdP Metadata -->
-<MetadataProvider type="XML" file="google-idp-metadata.xml"/>
+        <!-- ------------------ -->
+        <!-- Other settings ... -->
+        <!-- ------------------ -->
+    </Sessions>
+    
+    <SSO discoveryProtocol="SAMLDS" discoveryURL="https://ssdds.gis.bgu.tum.de/WAYF">
+        SAML2
+    </SSO>
+    
+    <!-- SDDI Google IdP Metadata -->
+    <MetadataProvider type="XML" file="google-idp-metadata.xml"/>
+    
+    <!-- DFN Production -->
+    <MetadataProvider type="XML" validate="false"
+                      uri="https://www.aai.dfn.de/fileadmin/metadata/dfn-aai-basic-metadata.xml"
+                      backingFilePath="dfn-aai-basic-metadata.xml" reloadInterval="3600">
+        <MetadataFilter type="Signature" certificate="dfn-aai.g2.pem"/>
+    </MetadataProvider>
+    <MetadataProvider type="XML" validate="false"
+                      uri="https://www.aai.dfn.de/fileadmin/metadata/dfn-aai-metadata.xml"
+                      backingFilePath="dfn-aai-metadata.xml" reloadInterval="3600">
+        <MetadataFilter type="Signature" certificate="dfn-aai.g2.pem"/>
+    </MetadataProvider>
+    
+    <!-- eduGain -->
+    <MetadataProvider type="XML" validate="false"
+                      uri="https://www.aai.dfn.de/fileadmin/metadata/dfn-aai-edugain+idp-metadata.xml"
+                      backingFilePath="dfn-aai-edugain+idp-metadata.xml" reloadInterval="3600">
+        <!--MetadataFilter type="Signature" certificate="dfn-aai.g2.pem"/-->
+    </MetadataProvider>
+    
+    <!-- Certificates. -->
+    <CredentialResolver type="File" key="private_key_no_passphrase.pem" certificate="certificate.pem"/>
 
-<!-- DFN Production -->
-<MetadataProvider type="XML" validate="false"
-                  uri="https://www.aai.dfn.de/fileadmin/metadata/dfn-aai-basic-metadata.xml"
-                  backingFilePath="dfn-aai-basic-metadata.xml" reloadInterval="3600">
-    <MetadataFilter type="Signature" certificate="dfn-aai.g2.pem"/>
-</MetadataProvider>
-<MetadataProvider type="XML" validate="false"
-                  uri="https://www.aai.dfn.de/fileadmin/metadata/dfn-aai-metadata.xml"
-                  backingFilePath="dfn-aai-metadata.xml" reloadInterval="3600">
-    <MetadataFilter type="Signature" certificate="dfn-aai.g2.pem"/>
-</MetadataProvider>
-
-<!-- eduGain -->
-<MetadataProvider type="XML" validate="false"
-                  uri="https://www.aai.dfn.de/fileadmin/metadata/dfn-aai-edugain+idp-metadata.xml"
-                  backingFilePath="dfn-aai-edugain+idp-metadata.xml" reloadInterval="3600">
-    <!--MetadataFilter type="Signature" certificate="dfn-aai.g2.pem"/-->
-</MetadataProvider>
-
-<!-- Certificates. -->
-<CredentialResolver type="File" key="private_key_no_passphrase.pem" certificate="certificate.pem"/>
+    <!-- ------------------ -->
+    <!-- Other settings ... -->
+    <!-- ------------------ -->
+</ApplicationDefaults>
 ```
 
 ### Update ``/etc/shibboleth/attribute-map.xml``
@@ -408,7 +431,7 @@ To make use of the attributes provided by the Google Idp,
 the applications hosted using Shibboleth might requires (personal) attributes to enhance the user experience 
 (such as to greet users using their name).
 
-To do this, edit the file ``/etc/shibboleth/attribute-map.xml``:
+To do this, edit the file ``/etc/shibboleth/attribute-map.xml``, such as:
 ```xml
 <!-- Attributes from Google IdP -->
 <Attribute name="sub" nameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri" id="sub" />
