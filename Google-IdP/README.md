@@ -335,11 +335,11 @@ to configure the logging in SimpleSAMLphp.
         'authoauth2:OAuth2',
         'template' => 'GoogleOIDC',
         // *** Certs ***
-        //'sign.logout' => true,
-        //'validate.logout' => true,
-        //'redirect.sign' => true,
-        //'privatekey' => 'google-idp_key.pem',
-        //'certificate' => 'google-idp_cert.pem',
+        'sign.logout' => true,
+        'validate.logout' => true,
+        'redirect.sign' => true,
+        'privatekey' => 'google-idp_key.pem',
+        'certificate' => 'google-idp_cert.pem',
         // *** Google Endpoints ***
         //'urlAuthorize' => 'https://accounts.google.com/o/oauth2/auth',
         //'urlAccessToken' => 'https://accounts.google.com/o/oauth2/token',
@@ -568,8 +568,84 @@ These must be transformed so that the Authorization Server can make sense of.
     ],
     ```
     
+    ***This can also be done in ``config.php``:***
+    ```php
+    /*
+     * Authentication processing filters that will be executed for all IdPs
+     * Both Shibboleth and SAML 2.0
+     */
+    'authproc.idp' => array(
+        1 => array(
+            'class' => 'saml:TransientNameID',
+        ),
+        // Create an additional attribute NameID that has the same value as sub
+        2 => array(
+            'class' => 'saml:PersistentNameID',
+            'attribute' => 'sub',
+        ),
+        // Add sub to the attributes and save in $state
+        3 => array(
+            'class' => 'saml:PersistentNameID2TargetedID',
+            'attribute' => 'sub',
+            'nameId' => FALSE,
+        ),
+        // Create an additional attribute subject-id that has the same value as sub
+        4 => array(
+            'class' => 'core:AttributeCopy',
+            'sub' => array('subject-id', 'uid'),
+        ),
+        // Change value true and false to 1 and 0
+        5 => array(
+            'class' => 'core:AttributeAlter',
+            'subject' => 'email_verified',
+            'pattern' => '/true/',
+            'replacement' => '1',
+        ),
+        6 => array(
+            'class' => 'core:AttributeAlter',
+            'subject' => 'email_verified',
+            'pattern' => '/false/',
+            'replacement' => '0',
+        ),
+        7 => array(
+            'class' => 'core:AttributeAdd',
+            'homeOrganization' => array('Google'),
+        ),
+        // Rename attributes for compatibility with the Authorization Server (see as.php)
+        // https://commons.lbl.gov/display/IDMgmt/Attribute+Definitions#AttributeDefinitions-organizationNameorganizationName
+        10 => array(
+            'class' => 'core:AttributeMap',
+            'homeOrganization' => 'urn:oid:1.3.6.1.4.1.25178.1.2.9',
+            'name' => 'urn:oid:2.16.840.1.113730.3.1.241',
+            'email' => 'urn:oid:0.9.2342.19200300.100.1.3',
+            'email' => 'urn:oid:1.2.840.113549.1.9.1',
+            'given_name' => 'urn:oid:2.5.4.42',
+            'family_name' => 'urn:oid:2.5.4.4',
+            'email_verified' => 'emailVerified',
+            'subject-id' => 'urn:oasis:names:tc:SAML:attribute:subject-id',
+            'uid' => 'urn:oid:0.9.2342.19200300.100.1.1',
+        ),
+        // Adopts language from attribute to use in UI
+        30 => 'core:LanguageAdaptor',
+        45 => array(
+            'class'         => 'core:StatisticsWithAttribute',
+            'attributename' => 'realm',
+            'type'          => 'saml20-idp-SSO',
+        ),
+        /*
+        // When called without parameters, it will fallback to filter attributes ‹the old way›
+        // by checking the 'attributes' parameter in metadata on IdP hosted and SP remote.
+        50 => array(
+        'class' => 'core:AttributeLimit',
+        ),
+        */
+        // If language is set in Consent module it will be added as an attribute.
+        99 => 'core:LanguageAdaptor',
+    ),
+    ```
+    
 1.  Note that existing rules with smaller priority number that affect the same attributes might interfere with the rules executed afterwards.
-    For this reason, it is recommended to **remove** the following elements in ``/var/google-idp/vendor/simplesamlphp/simplesamlphp/config/config.php``:
+    For this reason, it is recommended to **remove or adjust** the following elements in ``/var/google-idp/vendor/simplesamlphp/simplesamlphp/config/config.php``:
     +   ``'authproc.idp' => [ ... ],``
     +   ``'authproc.sp' => [ ... ],``
     
