@@ -380,8 +380,9 @@ curl https://www.aai.dfn.de/fileadmin/metadata/dfn-aai.g2.pem -o dfn-aai.g2.pem
 ```xml
 <ApplicationDefaults entityID="https://ssdsos<N>.gis.bgu.tum.de/shibboleth"
                      REMOTE_USER="eppn persistent-id targeted-id">
-    
-    <Sessions>
+
+    <Sessions lifetime="28800" timeout="3600" relayState="ss:mem"
+              checkAddress="false" handlerSSL="true" cookieProps="http" redirectLimit="exact">
         <!-- https://stackoverflow.com/questions/34615409/shibboleth-sp-logout-results-in-security-of-logoutresponse-not-established -->
         <!-- https://wiki.shibboleth.net/confluence/display/SP3/SingleLogoutService -->
         <md:SingleLogoutService Location="/SLO/Redirect" conf:template="bindingTemplate.html" conf:policyId="unsigned-slo" Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"/>
