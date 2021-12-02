@@ -64,36 +64,47 @@ Normally the certificates and private keys are stored in the directory ``/etc/ss
 Other directories should (already) only have symbolic links to these files.
 Such directories might be:
     
-+   For **Authorization Server**:
-    +   ``/etc/pki/tls/certs/`` 
-        (used in file ``/etc/httpd/conf.d/ssl.conf``)
-    +   ``/opt/authorization-server/pki/`` 
-        (used in file ``/opt/authorization-server/config/config.php``)
-    +   ``/opt/authorization-server/vendor/simplesamlphp/simplesamlphp/cert/`` 
-        (used in file ``/opt/authorization-server/vendor/simplesamlphp/simplesamlphp/config/authsources.php``)
++ For **Authorization Server**:
+  + Certificate type: Shibboleth IdP/SAML
+  + ``/etc/pki/tls/certs/`` 
+      (used in file ``/etc/httpd/conf.d/ssl.conf``)
+  + ``/opt/authorization-server/pki/`` 
+      (used in file ``/opt/authorization-server/config/config.php``)
+  + ``/opt/authorization-server/vendor/simplesamlphp/simplesamlphp/cert/`` 
+      (used in file ``/opt/authorization-server/vendor/simplesamlphp/simplesamlphp/config/authsources.php``)
     
     For more information please refer to [the instructions](AS/authorization-server/README.md#manage-ssl-certificates).
 
-+   For **Discovery Service**:
-    +   ``/etc/pki/tls/certs/``
-        (used in file ``/etc/httpd/conf.d/ssl.conf``)
++ For **Discovery Service**:
+  + Certificate type: Web Server
+  + ``/etc/pki/tls/certs/``
+    (used in file ``/etc/httpd/conf.d/ssl.conf``)
 
-    For more information please refer to [the instructions](DS/README.md#configure-apache-server-for-wayf).
+  For more information please refer to [the instructions](DS/README.md#configure-apache-server-for-wayf).
 
-+   For **Google IdP**:
-    +   ``/etc/pki/tls/certs/``
-        (used in file ``/etc/httpd/conf.d/ssl.conf``)
-    +   ``/var/google-idp/vendor/simplesamlphp/simplesamlphp/cert/``
-        (used in file ``/var/google-idp/vendor/simplesamlphp/simplesamlphp/config/authsources.php`` 
-        and file ``/var/google-idp/vendor/simplesamlphp/simplesamlphp/metadata/saml20-idp-hosted.php``)
++ For **Google IdP**:
+  + Certificate type: Web Server
+  + ``/etc/pki/tls/certs/``
+    (used in file ``/etc/httpd/conf.d/ssl.conf``)
+  + ``/var/google-idp/vendor/simplesamlphp/simplesamlphp/cert/``
+    (used in file ``/var/google-idp/vendor/simplesamlphp/simplesamlphp/config/authsources.php`` 
+    and file ``/var/google-idp/vendor/simplesamlphp/simplesamlphp/metadata/saml20-idp-hosted.php``)
 
-    For more information please refer to [the instructions](Google-IdP/README.md#set-up-simplesamlphp-identity-provider).
+  For more information please refer to [the instructions](Google-IdP/README.md#set-up-simplesamlphp-identity-provider).
 
-+   For **Service Providers** like SOS1 and SOS2:
-    +   ``/etc/ssl/certs/`` (used in file ``/etc/apache2/sites-available/sos-https.conf``)
-    +   ``/etc/shibboleth/`` (used in ``/etc/shibboleth/shibboleth2.xml``)
++ For **Service Providers** like SOS1 and SOS2:
+  + Certificate type: Shibboleth IdP/SAML 
+  + ``/etc/ssl/certs/`` (used in file ``/etc/apache2/sites-available/sos-https.conf``)
+  + ``/etc/shibboleth/`` (used in ``/etc/shibboleth/shibboleth2.xml``)
 
-    For more information please refer to [the instructions](SP/README.md#manage-ssl-certificates).
+  For more information please refer to [the instructions](SP/README.md#manage-ssl-certificates).
+
++ Fore **Resource Provider** like WFS:
+  + Certificate type: Web Server
+  + ``/etc/pki/tls/certs/``
+    (used in file ``/etc/httpd/conf.d/ssl.conf``)
+
+  For more information please refer to [the instructions](RS/README.md#install-apache-web-server).
 
 1.  Copy the certificates and private keys to the directory ``/etc/ssl/certs/``.
     

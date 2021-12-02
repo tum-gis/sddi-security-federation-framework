@@ -44,7 +44,7 @@ firewall-cmd --list-all
 ````
 
 ### Install Apache Web Server
-The AS operates on HTTPS which requires to also install the `mod_ssl` module.
+The RS operates on HTTPS which requires to also install the `mod_ssl` module.
 
 ````
 yum -y install httpd mod_ssl
