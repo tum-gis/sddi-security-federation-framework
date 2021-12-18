@@ -106,21 +106,21 @@ Such directories might be:
 
   For more information please refer to [the instructions](RS/README.md#install-apache-web-server).
 
-1.  Copy the certificates and private keys to the directory ``/etc/ssl/certs/``.
+1. Copy the certificates and private keys to the directory ``/etc/ssl/certs/``.
     
-1.  Check if the symbolic links already exist according to the above mentioned instructions for the current server.
+2. Check if the symbolic links already exist according to the above mentioned instructions for the current server.
     
-1.  Restore the certificates and private keys after copying:
+3. Restore the certificates and private keys after copying:
     ```bash
     restorecon -RvF /etc/ssl/certs/
     ```
 
-1.  Remove the passphrase from the private key (especially for the Authorization Server):
+4. Remove the passphrase from the private key (especially for the Authorization Server):
     ```bash
     openssl rsa -in private_key.pem -out private_key_no_passphrase.pem
     ```
 
-1.  Assign group and owner to ``apache``:
+5. Assign group and owner to ``apache``:
     ```bash
     chown apache:apache certificate.pem
     chown apache:apache private_key.pem
@@ -128,7 +128,7 @@ Such directories might be:
     chown apache:apache chain.pem
     ```
 
-1.  Change permissions accordingly:
+6. Change permissions accordingly:
     ```bash
     chmod 644 ./certificate.pem
     chmod 400 ./private_key.pem
@@ -136,8 +136,8 @@ Such directories might be:
     chmod 644 ./chain.pem
     ```
 
-1.  Update metadata:
-    +   When updating **Authorization Server**:
+7. Update metadata:
+    + When updating **Authorization Server**:
         +   *Will the metadata on the web of the Authorization Server be updated as well by the admins?*
         +   Go to the Discovery Service and repeat the [instructions](DS/README.md#preparing-the-wayf-for-the-first-use).
         +   Copy the metadata of Authorization Server SPs (``oauth``, ``oidc-profile`` and ``openid``) (flat format):
@@ -170,7 +170,7 @@ Such directories might be:
             
             ```
     
-    +   When updating **Google IdP**:
+    + When updating **Google IdP**:
         +   Go to https://google-idp.gis.bgu.tum.de/simplesaml/saml2/idp/metadata.php?output=xhtml and copy the metadata (flat format)
         +   Go to Authorization Server and paste it or replace the old metadata in the file ``/opt/authorization-server/vendor/simplesamlphp/simplesamlphp/metadata/saml20-idp-remote.php``:
             ```php
@@ -183,37 +183,21 @@ Such directories might be:
             ```
         +   Go to Discovery Service and repeat the steps in the [documentation](DS/README.md#preparing-the-wayf-for-the-first-use).
         
-    +   When updating **SOS1 and SOS2**:
-        +   Copy the metadata of SOS1, SOS2, Authorization Server SPs (``oauth``, ``oidc-profile`` and ``openid``) (flat format):
-            https://ssdas.gis.bgu.tum.de/simplesaml/module.php/saml/sp/metadata.php/oauth?output=xhtml
-            https://ssdas.gis.bgu.tum.de/simplesaml/module.php/saml/sp/metadata.php/oidc-profile?output=xhtml
-            https://ssdas.gis.bgu.tum.de/simplesaml/module.php/saml/sp/metadata.php/openid?output=xhtml
-
-        +   Go to Google Idp and paste them or replace the old metadata in the file ``/var/google-idp/vendor/simplesamlphp/simplesamlphp/metadata/saml20-sp-remote.php``:
-            ```bash
-            <?php
-            
-            $metadata['https://ssdsos1.gis.bgu.tum.de/shibboleth'] = array (
-                ...
-            );
-            
-            $metadata['https://ssdsos2.gis.bgu.tum.de/shibboleth'] = array (
-                ...
-            );
-        
-            $metadata['https://ssdas.gis.bgu.tum.de/oauth'] = array (
-                ...
-            ):
-            
-            $metadata['https://ssdas.gis.bgu.tum.de/oidc-profile'] = array (
-                ...
-            ):
-            
-            $metadata['https://ssdas.gis.bgu.tum.de/openid'] = array (
-                ...
-            ):
-            
-            ```
+    + When updating **SOS1 and SOS2**:
+        + Download the metadata from:
+          https://ssdsosX.gis.bgu.tum.de/Shibboleth.sso/Metadata
+        + This file is in XML format but flat format is needed. To convert go to:
+          https://google-idp.gis.bgu.tum.de/simplesaml/admin/metadata-converter.php
+          + Username: ``admin``
+          + Password: value of ``'auth.adminpassword'`` of file ``/var/google-idp/vendor/simplesamlphp/simplesamlphp/config/config.php`` in Google Idp 
+        + And paste the converted flat format into this file:
+          ```bash
+          sudo vi /var/google-idp/vendor/simplesamlphp/simplesamlphp/metadata/saml20-sp-remote.php
+          # /*
+          #  * SSDSOSX
+          #  */
+          # <Delete the old content and paste the content of the first link here>
+          ```
 
 [*To the top*](#troubleshooting)
 
