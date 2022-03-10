@@ -312,7 +312,7 @@ to configure the logging in SimpleSAMLphp.
 
 1.  Since the default directory for certificates and private keys for SimpleSAMLPHP is
     in the directory ``/var/google-idp/vendor/simplesamlphp/simplesamlphp/cert``
-    as given in the variable ``'certdir' => 'cert/''``
+    as given in the variable ``'certdir' => 'cert/'``
     in the file ``/var/google-idp/vendor/simplesamlphp/simplesamlphp/config/config.php``:
     + EITHER change the path to the variable ``certdir``
     + OR create symbolic links to existing certificates and private keys in the directory

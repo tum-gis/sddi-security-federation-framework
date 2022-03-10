@@ -1053,7 +1053,11 @@ chown apache:apache metadata/metafresh*
 
 The automated fetching of metadata requires the certificate of the coordination center - which is DFN in the example above. 
 Please make sure you download the `dfn-aai.g2.pem` file and store it into the 
-`.../vendor/simplesamlphp/simplesamlphp/cert` directory.
+`.../vendor/simplesamlphp/simplesamlphp/cert` directory:
+````
+cd /opt/authorization-server/vendor/simplesamlphp/simplesamlphp/cert
+sudo curl http://www.aai.dfn.de/fileadmin/metadata/dfn-aai.g2.pem -o dfn-aai.g2.pem 
+````
 
 Create ``.../vendor/simplesamlphp/simplesamlphp/metadata/metarefresh.php``:
 ````php
@@ -1146,7 +1150,8 @@ $logentries = \SimpleSAML\Logger::getCapturedLog();
 For initializing the metadata you can manually fetch the metadata from the configured sources using user `apache`:
 
 ````
-cd .../vendor/simplesamlphp/simplesamlphp/metadata
+sudo -i
+cd /opt/authorization-server/vendor/simplesamlphp/simplesamlphp/metadata
 su -s /bin/bash apache -c "php metarefresh.php"
 ````
 
