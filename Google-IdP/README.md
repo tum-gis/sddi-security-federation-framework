@@ -290,6 +290,9 @@ setsebool httpd_can_network_connect_db 1
 # Use -P option to make the change permanent
 # (or else the flag will be set to 0 again after reboot)
 setsebool -P httpd_can_network_connect_db 1
+
+# Start Apache on startup:
+sudo chkconfig httpd on
 ```
 
 Restart:

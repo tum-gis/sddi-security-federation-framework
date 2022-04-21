@@ -246,6 +246,10 @@ firewall-cmd --list-all
 firewall-cmd --permanent --zone=public --add-service=http
 firewall-cmd --reload
 ```
+Start Apache on startup:
+```bash
+sudo chkconfig httpd on
+```
 
 ## Test
 Once the configuration is complete, you can open the WAYF in a Web Browser and check if all expected IdP organizations are listed. The URL to use is `https://<your domain name for the DS>/WAYF`. 

@@ -1316,6 +1316,11 @@ firewall-cmd --list-all
 
 ### Other settings
 
+##### Start Apache on startup
+```bash
+sudo chkconfig httpd on
+```
+
 ##### SELinux security policies
 
 The SELinux policy ``httpd_can_network_connect_db`` 
@@ -1389,7 +1394,7 @@ openssl rsa -in private_key.pem -out private_key_no_passphrase.pem
       'public_key' => '../pki/certificate.pem',
     ```
     
-2.  Similarly, create symbolic links the private key and certificate to the directory 
+1.  Similarly, create symbolic links the private key and certificate to the directory 
     ``/opt/authorization-server/vendor/simplesamlphp/simplesamlphp/cert/``:
     ```bash
     cd /opt/authorization-server/vendor/simplesamlphp/simplesamlphp/cert/

@@ -89,6 +89,10 @@ openssl rsa -in private_key.pem -out private_key_no_passphrase.pem
     chmod 644 ./certificate.pem
     chmod 644 ./chain.pem
     ```
+1.  Start Apache on startup:
+    ```bash
+    sudo chkconfig httpd on
+    ```
 
 ---------------------
 
