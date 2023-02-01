@@ -100,11 +100,10 @@ In order to compile the list of IdPs, you need to download the following SAML2 m
   ````bash
   cd /opt/discovery-service
   # Metadata containing SPs such as oauth, oidc-profile and openid in ssdas.gis.bgu.tum.de
-  curl http://www.aai.dfn.de/fileadmin/metadata/dfn-aai-basic-metadata.xml -o dfn-aai-basic-metadata.xml
-  # Metadata containing SOS1 and SOS2
-  curl http://www.aai.dfn.de/fileadmin/metadata/dfn-aai-metadata.xml -o dfn-aai-metadata.xml
+  # as well as ssdsos1.gis.bgu.tum.de and ssdsos2.gis.bgu.tum.de
+  curl https://www.aai.dfn.de/fileadmin/metadata/dfn-aai-sp-metadata.xml -o dfn-aai-sp-metadata.xml
   # Metadata containing TUM IdP
-  curl https://www.aai.dfn.de/fileadmin/metadata/dfn-aai-edugain+idp-metadata.xml -o dfn-aai-edugain+idp-metadata.xml
+  curl https://www.aai.dfn.de/fileadmin/metadata/dfn-aai-metadata.xml -o dfn-aai-metadata.xml
   ````
   If the name of these metadata files were changed, 
   reflect them in the file ``/opt/discovery-service/compose_metadata.sh``.

@@ -360,8 +360,7 @@ cd /etc/shibboleth/
 curl https://google-idp.gis.bgu.tum.de/simplesaml/saml2/idp/metadata.php -o google-idp-metadata.xml 
 
 # Federated metadata
-curl http://www.aai.dfn.de/fileadmin/metadata/dfn-aai-basic-metadata.xml -o dfn-aai-basic-metadata.xml
-curl http://www.aai.dfn.de/fileadmin/metadata/dfn-aai-metadata.xml -o dfn-aai-metadata.xml
+curl https://www.aai.dfn.de/fileadmin/metadata/dfn-aai-sp-metadata.xml -o dfn-aai-sp-metadata.xml
 curl https://www.aai.dfn.de/fileadmin/metadata/dfn-aai-edugain+idp-metadata.xml -o dfn-aai-edugain+idp-metadata.xml
 
 # Update metadata signature
@@ -401,13 +400,8 @@ curl https://www.aai.dfn.de/fileadmin/metadata/dfn-aai.g2.pem -o dfn-aai.g2.pem
     
     <!-- DFN Production -->
     <MetadataProvider type="XML" validate="false"
-                      uri="https://www.aai.dfn.de/fileadmin/metadata/dfn-aai-basic-metadata.xml"
-                      backingFilePath="dfn-aai-basic-metadata.xml" reloadInterval="3600">
-        <MetadataFilter type="Signature" certificate="dfn-aai.g2.pem"/>
-    </MetadataProvider>
-    <MetadataProvider type="XML" validate="false"
-                      uri="https://www.aai.dfn.de/fileadmin/metadata/dfn-aai-metadata.xml"
-                      backingFilePath="dfn-aai-metadata.xml" reloadInterval="3600">
+                      uri="https://www.aai.dfn.de/fileadmin/metadata/dfn-aai-sp-metadata.xml"
+                      backingFilePath="dfn-aai-sp-metadata.xml" reloadInterval="3600">
         <MetadataFilter type="Signature" certificate="dfn-aai.g2.pem"/>
     </MetadataProvider>
     

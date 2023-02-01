@@ -979,21 +979,9 @@ $config = array(
 		    'cron' => array('daily'),
 		    'sources' => array(
 		        // Metadata containing SPs such as oauth, oidc-profile and openid in ssdas.gis.bgu.tum.de
+                // as well as ssdsos1.gis.bgu.tum.de and ssdsos2.gis.bgu.tum.de
 				array(
-                    'src' => 'https://www.aai.dfn.de/fileadmin/metadata/dfn-aai-basic-metadata.xml',
-					'certificates' => array(
-						'dfn-aai.g2.pem'
-					),
-					'template' => array(
-						'tags'	=> array('dfn'),
-						'authproc' => array(
-							51 => array('class' => 'core:AttributeMap', 'oid2name'),
-						),
-					),
-				),
-				// Metadata containing SOS1 and SOS2
-				array(
-                    'src' => 'https://www.aai.dfn.de/fileadmin/metadata/dfn-aai-metadata.xml',
+                    'src' => 'https://www.aai.dfn.de/fileadmin/metadata/dfn-aai-sp-metadata.xml',
 					'certificates' => array(
 						'dfn-aai.g2.pem'
 					),
