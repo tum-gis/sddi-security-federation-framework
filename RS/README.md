@@ -381,6 +381,18 @@ host all all 0.0.0.0/0 md5
 host all all ::1/128 md5
 ```
 
+Note, to limit only connection from `localhost` to port `5432`:
+```bash
+# CentOS: /var/lib/pgsql/9.5/data/pg_hba.conf
+# Allow only this line
+host    <DATABASE>     postgres        127.0.0.1/32    md5
+
+# CenOS: /var/lib/pgsql/9.5/data/postgresql.conf
+# Change these lines to
+listen_addresses = 'localhost'
+port = 5432
+```
+
 In both servers, restart PostgreSQL:
 ```
 # Ubuntu
